@@ -1,0 +1,1252 @@
+\documentclass[runningheads]{llncs}
+
+
+%% Bibliography style
+\bibliographystyle{splncsnat}
+
+%% Some recommended packages.
+\usepackage{booktabs}   %% For formal tables:
+                        %% http://ctan.org/pkg/booktabs
+%\usepackage{subcaption} %% For complex figures with subfigures/subcaptions
+                        %% http://ctan.org/pkg/subcaption
+
+\usepackage{xcolor}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{tikz}
+\usepackage{mathtools}
+\usepackage[numbers]{natbib}
+\usepackage[misc]{ifsym} 
+
+\usepackage{float}
+\floatstyle{boxed} 
+\restylefloat{figure}
+
+%\allowdisplaybreaks
+
+% From https://aty.sdsu.edu/bibliog/latex/floats.html
+% Alter some LaTeX defaults for better treatment of figures:
+% See p.105 of "TeX Unbound" for suggested values.
+% See pp. 199-200 of Lamport's "LaTeX" book for details.
+%   General parameters, for ALL pages:
+\renewcommand{\topfraction}{0.9}	% max fraction of floats at top
+\renewcommand{\bottomfraction}{0.8}	% max fraction of floats at bottom
+%   Parameters for TEXT pages (not float pages):
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}     % 2 may work better
+\setcounter{dbltopnumber}{2}    % for 2-column pages
+\renewcommand{\dbltopfraction}{0.9}	% fit big float above 2-col. text
+\renewcommand{\textfraction}{0.07}	% allow minimal text w. figs
+%   Parameters for FLOAT pages (not text pages):
+\renewcommand{\floatpagefraction}{0.7}	% require fuller float pages
+% N.B.: floatpagefraction MUST be less than topfraction !!
+\renewcommand{\dblfloatpagefraction}{0.7}	% require fuller float pages
+
+% remember to use [htp] or [htpb] for placement
+
+%%%%%%%
+
+
+
+
+\newcommand{\todo}[1]{\textcolor{red}{TODO: {#1}}}
+\newcommand{\erase}[1]{{}}
+
+\newenvironment{bprooftree}
+  {\leavevmode\hbox\bgroup}
+  {\DisplayProof\egroup}
+
+%\DeclareMathOperator{\Ctx}{Ctx}
+%\DeclareMathOperator{\Ty}{Ty}
+\DeclareMathOperator{\USet}{Set}
+\DeclareMathOperator{\UU}{U}
+%\DeclareMathOperator{\El}{El}
+%\DeclareMathOperator{\step}{step}
+%\DeclareMathOperator{\join}{join}
+\DeclareMathOperator{\isSort}{isSort}
+\DeclareMathOperator{\head}{head}
+\DeclareMathOperator{\isEquiv}{isEquiv}
+\DeclareMathOperator{\Arg}{Arg}
+\DeclareMathOperator{\Ix}{Ix}
+
+\newcommand{\pre}[1]{{#1}_\text{pre}}
+\newcommand{\good}[1]{{#1}_\text{good}}
+\newcommand{\Id}[2]{{#1}\equiv{#2}}
+\newcommand{\IdA}[3]{{#1}\equiv_{#3}{#2}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\II}{\mathbb{I}}
+\newcommand{\bbO}{\mathbb{O}}
+\newcommand{\tac}{\vdash}
+\newcommand{\join}{\texttt{join}}
+\newcommand{\inj}{\texttt{inj}}
+\newcommand{\refl}{\texttt{refl}}
+\def\Forsberg/{Nordvall Forsberg}
+\def\emptytuple{\langle\rangle}
+
+\begin{document}
+
+%% Title information
+\title{Constructing Inductive-Inductive Types in Cubical Type Theory}
+
+\author{Jasper Hugunin}
+\institute{University of Washington, Seattle WA, USA\\
+    \email{jasperh@cs.washington.edu} \Letter
+    }
+
+\maketitle
+
+\begin{abstract}
+Inductive-inductive types are a joint generalization of mutual inductive types and indexed inductive types. In extensional type theory, inductive-inductive types can be constructed from inductive types, and this construction has been conjectured to work in intensional type theory as well. In this paper, we show that the existing construction requires Uniqueness of Identity Proofs, and present a new construction in cubical type theory which is compatible with Homotopy Type Theory.
+\end{abstract}
+
+\begin{section}{Introduction}
+    
+Inductive-inductive types allow for the mutual inductive definition of a type and a family over that type. As an example, writing $(x : X) \to Y$ for dependent product and $\USet$ for a universe, we can simultaneously define contexts and types defined in a context:
+\begin{align*}
+\text{Ctx} &: \USet,\qquad
+&\text{Ty} &: \text{Ctx} \to \USet,\\
+\epsilon &: \text{Ctx},\qquad
+&\text{U} &: (\Gamma : \text{Ctx}) \to \text{Ty}\;\Gamma,\\
+\join &: (\Gamma : \text{Ctx}) \to \text{Ty}\; \Gamma \to \text{Ctx},\qquad
+&\text{El} &: (\Gamma : \text{Ctx}) \to \text{Ty}\;(\join\;\Gamma\;(\text{U}\;\Gamma)).
+\end{align*}
+Such definitions have been used for example by \citet{danielssonIRdeptype} and \citet{CHAPMAN200921} to define intrinsically typed syntax of a dependent type theory, and Agda supports such definitions natively.
+
+These types have been studied extensively in \citet{nordvallforsberg2013thesis}. There, in \S5.3, inductive-inductive types with simple elimination rules (defined in \S3.2.5) are constructed from indexed inductive types in extensional type theory, and in \S5.4 the same construction is conjectured to work in intensional type theory.
+
+In this paper, we first show that this construction does not work in intensional type theory without assuming Uniqueness of Identity Proofs (UIP), which is incompatible with the Univalence axiom of Homotopy Type Theory \citep{hottbook}. We then give an alternate construction in cubical type theory \citep{cubicaltt_ifcolog}, which is compatible with Univalence.
+%, and make progress towards constructing the general elimination rules.
+Specifically, this paper makes the following contributions:
+\begin{enumerate}
+    \item In \S\ref{derivingUIP}, we show that, in intensional type theory, if the types constructed by \Forsberg/ satisfy the simple elimination rules, then UIP holds. This has been formalized in both Coq and Agda.
+    \item In \S\ref{example-construct-cubical}, we describe the construction of a specific inductive-inductive type in cubical type theory, along with its simple elimination rules. This construction has been formalized in cubical Agda.
+    %\item In \S\ref{construct-cubical}, we define a general class of inductive-inductive definitions, and prove that they can all be constructed in cubical type theory, satisfying the simple elimination rules, following the same pattern as our example construction.
+\end{enumerate}
+
+\erase{\todo{work on this} While Agda supports inductive-inductive types natively \citep{nordvallforsbergSetzer2010inductiveinductive}, Coq 8.8 does not. Constructing inductive-inductive types out of simpler types allows for a simpler core type theory without sacrificing expressiveness.}
+
+\end{section}
+
+\begin{section}{Syntax and Conventions}
+    Here we describe various pieces of syntax and conventions used in this paper. For the most part, we mimic Agda syntax. The double bar symbol $=$ is used for definitions directly and by pattern matching, and for equality of terms up to conversion. We write $(a : A) \to B$ for the dependent product type, and $A \to B$ for the non-dependent version. Functions are given by pattern matching $f\; x = y$ or by lambda expressions $f = \lambda x.y$. Similarly $(a : A) \times B$ is the dependent pair type, and $A \times B$ the non-dependent version. Pairs are $(a, b)$, and projections are $p.1$ and $p.2$. The unit type is $\top$, with unique inhabitant $\star$. Identity types are $\IdA{x}{y}{X}$ for the type of identifications of $x$ with $y$ in type $X$, and we write $\refl$ for a proof of reflexivity. We do not assume that axiom K holds for identity types.\erase{ We often use left-nested dependent pair types, or tuples $(\star : \top) \times (a : A) \times (b : B) \times C$. We will use $\langle a, b, c\rangle$ as a shorthand for $(((\star, a), b), c)$, and if there are names associated with the components, such as $A$, $B$, and $C$ above, we may use $\langle p.A, p.B, p.C\rangle$ for the projections.} We write $\USet$ for a universe of types.
+    
+    \erase{ In section \ref{IIspecs-definition}, we define a syntactic extension of type theory, to write specifications of inductive-inductive types. There we use $\Pi$ to suggest dependent function types, $\Sigma$ to suggest dependent pair types, and $\UU$ to suggest a universe. However, these symbols will only be used in syntax for inductive-inductive specifications, and not to denote types. We reuse $\top$ and $\star$, as well as notations for lambda and pairing, letting context disambiguate. }
+    
+
+\end{section}
+
+\begin{section}{\label{II-examples}Running Example of an Inductive-Inductive Definition}
+
+\erase{
+Inductive-inductive definitions have many potential uses.
+We have already seen an example with contexts and types in the introduction, which is the classic example of an inductive-inductive definition. \citet{KaposiKovacsHIITsyntax} have given a definition of what is an inductive-inductive definition; here we give some more examples.
+}
+\erase{
+For an example with a more mathematical flavor, we can consider the dense completion of a relation (example from \citet{nordvallforsberg2013thesis}). Given a set $A$ and relation $\leq$ on $A$, the relation is called dense if for all $x$ and $y$ in $A$ such that $x \leq y$, there is a point $x \leq \text{mid}(x,y) \leq y$. The dense completion of a relation $(A,\leq)$ is the smallest relation $(A^*,\leq^*)$ which contains $(A,\leq)$ and is dense. We can write this as an inductive-inductive definition by taking
+\begin{align*}
+A^* &: \USet,\\
+\leq^* &: A^* \to A^* \to A^*,\\
+\eta_A &: A \to A^*,\\
+\eta_\leq &: (x : A) \to (y : A) \to x \leq y \to \eta_A\;x \leq^* \eta_A\;y,\\
+\text{mid} &: (x : A^*) \to (y : A^*) \to x \leq^* y \to A^*,\\
+\text{mid}_l &: (x : A^*) \to (y : A^*) \to (p : x \leq^* y) \to x \leq^* \text{mid}\;x\;y\;p,\\
+\text{mid}_r &: (x : A^*) \to (y : A^*) \to (p : x \leq^* y) \to \text{mid}\;x\;y\;p \leq^* y.
+\end{align*}
+Here the $\eta$ rules express that $(A, \leq)$ is a sub-relation of $(A^*, \leq^*)$, while $\text{mid}$ equips $(A^*, \leq^*)$ with a midpoint for every two related points.
+}
+
+For the purposes of this paper, we will focus on one relatively simple inductive-inductive definition (with only 5 clauses), parametrized by a type $X$, which is given in Figure \ref{example-definition}.
+We will take this as our running example, and use it to prove that \Forsberg/'s construction implies UIP for $X$ (in \S\ref{derivingUIP}) and to demonstrate our construction in cubical type theory (in \S\ref{example-construct-cubical}).
+
+Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s, and $\eta$ gives us something to start with: one element of $A$ for each element of $X$.
+Our proof of UIP in \S\ref{derivingUIP} proceeds by considering $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
+
+\begin{figure}[htpb]
+    \begin{flushleft}
+        Assuming we have $X : \USet$, we consider the inductive-inductive definition\vspace{-.1in}
+        \begin{align*}
+        A &: \USet,\\
+        B &: A \to \USet,\\
+        \eta &: X \to A,\\
+        \join &: (a : A) \to B\;a \to A,\\
+        \inj &: (a : A) \to B\;a.\\[-.3in]
+        \end{align*}
+        This has simple elimination rules stating that for all motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$\vspace{-.1in}
+        \begin{align*}
+        PA :&\; A \to \USet,\\
+        PB :&\; (a : A) \to B\;a\to \USet,\\
+        P\eta :&\; (x : X) \to PA\;(\eta\;x),\\
+        P\join :&\; (a : A) \to PA\;a\to (b : B\;a) \to PB\;a\;b \to PA\;(\join\;a\;b),\\
+        P\inj :&\; (a : A) \to PA\;a\to PB\;a\;(\inj\;a),\\[-.3in]
+        \end{align*}
+        we have eliminators $(EA, EB)$ satisfying equalities $(E\eta, E\join, E\inj)$.\vspace{-.1in}
+        \begin{align*}
+        EA :&\; (a : A) \to PA\;a,\\
+        EB :&\; (a : A) \to (b : B\;a) \to PB\;a\;b,\\
+        E\eta :&\; (x : X) \to \IdA{EA\;(\eta\;x)}{P\eta\;x}{PA\;(\eta\;x)},\\
+        E\join :&\; (a : A) \to (b : B\;a) \to\\&\; \IdA{EA\;(\join\;a\;b)}{P\join\;a\;(EA\;a)\;b\;(EB\;a\;b)}{PA\;(\join\;a\;b)},\\
+        E\inj :&\; (a : A) \to \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.\\[-.3in]
+        \end{align*}
+    \end{flushleft}
+    
+    \caption{\label{example-definition}Running Example}
+\end{figure}
+
+Our goal in this paper is to construct $(A,B,\eta,\join,\inj)$ of the above types given in Figure \ref{example-definition} such that the simple elimination rules (as defined in \citet[\S3.2.5]{nordvallforsberg2013thesis}) hold without using UIP. But first, we will show why \Forsberg/'s approach is not sufficient.
+
+
+
+\end{section}
+
+\begin{section}{Deriving UIP}\label{derivingUIP}
+
+\Forsberg/'s construction of inductive-inductive types is described in \citet[\S5.3]{nordvallforsberg2013thesis}. In this section, we show that if the simple elimination rules hold for \Forsberg/'s construction of the inductive-inductive type in Figure \ref{example-definition}, then Uniqueness of Identity Proofs (UIP) holds for the type $X$ (Theorem \ref{Forsberg-gives-UIP}).
+This argument has been formalized in Coq version 8.8.0 \citep{Coq880}, which does not natively support UIP and thus there is no danger of accidentally assuming our conclusion. See \texttt{UIP\textunderscore{}from\textunderscore{}Forsberg\textunderscore{}II.v}. The same argument has also been formalized in Agda using the \texttt{--without-K} flag to avoid UIP, see \texttt{UIP\textunderscore{}from\textunderscore{}Forsberg\textunderscore{}II.agda}
+
+UIP (for a type $X$) is the principle that, for all $x : X$, $y : X$, $p : \IdA{x}{y}{X}$, $q : \IdA{x}{y}{X}$, the type $\IdA{p}{q}{\IdA{x}{y}{X}}$ is inhabited. Equivalently, for all $x : X$, $p : \IdA{x}{x}{X}$, the type $\IdA{p}{\refl}{\IdA{x}{x}{X}}$ is inhabited. It expresses that there is at most one proof of any equality. UIP is independent of standard intensional type theory \citep{groupoidmodel}, and is inconsistent with Homotopy Type Theory \citep{hottbook}.
+
+To recap, \citet[\S5.3]{nordvallforsberg2013thesis} constructs an inductive-inductive type by first defining an approximation (the \emph{pre-syntax}) which drops the $A$ index from $B$ to form a mutual inductive definition. Concretely, we have $\pre{A}$ and $\pre{B}$ defined as in Figure \ref{example-pre-syntax}.
+
+\begin{figure}[htpb]
+    \begin{flushleft}
+        Dropping the inductive index from $B$ leaves a mutual inductive definition.
+        \begin{align*}
+        \pre{A}&:\USet,\\
+        \pre{B}&:\USet,\\
+        \pre{\eta}&:X\to\pre{A},\\
+        \pre{\join}&:\pre{A}\to\pre{B}\to\pre{A},\\
+        \pre{\inj}&:\pre{A}\to\pre{B}.
+        \end{align*}
+    \end{flushleft}
+    \caption{\label{example-pre-syntax}Pre-syntax for our running example}
+\end{figure}
+
+A mutual indexed inductive definition is then used to define the index relationship between $\pre{A}$ and $\pre{B}$:
+\begin{align*}
+\good{A}:&\; \pre{A}\to\USet,\\
+\good{B}:&\; \pre{A}\to\pre{B}\to\USet,\\
+\good{\eta}:&\; (x : X) \to \good{A}\;(\pre{\eta}\;x),\\
+\good{\join}:&\; (\pre{a} : \pre{A})\to\good{A}\;\pre{a}\to\\&\;(\pre{b} : \pre{B})\to\good{B}\;\pre{a}\;\pre{b}\to\good{A}\;(\pre{\join}\;\pre{a}\;\pre{b}),\\
+\good{\inj}:&\;(\pre{a}:\pre{A})\to\good{A}\;\pre{a}\to\good{B}\;\pre{a}\;(\pre{\inj}\;\pre{a}).
+\end{align*}
+The inductive-inductive object is defined as
+\begin{align*}
+A =&\; (\pre{a} : \pre{A})\times \good{A}\;\pre{a},\\
+B\; (\pre{a},\good{a}) =&\; (\pre{b} : \pre{B})\times\good{B}\;\pre{a}\;\pre{b},\\
+\eta\;x =&\;\pre{\eta}\;x,\good{\eta}\;x,\\
+\join\;(\pre{a},\good{a})\;(\pre{b},\good{b})=&\; \pre{\join}\;\pre{a}\;\pre{b}, \good{\join}\;\pre{a}\;\good{a}\;\pre{b}\;\good{b},\\
+\inj\;(\pre{a},\good{a})=&\;\pre{\inj}\;\pre{a}, \good{\inj}\;\pre{a}\;\good{a}.
+\end{align*}
+Here, the sorts $A$ and $B$ are defined as pairs of the pre-syntax with a goodness proof, and operations are performed component-wise on both the pre-syntax and the goodness proof.
+
+In extensional type theory, \Forsberg/ proved that inhabitants of $\good{A}$ are unique \citep[][Lemma 5.37(ii)]{nordvallforsberg2013thesis}. In intensional type theory as well, if UIP holds then inhabitants of $\good{A}$ are unique. The uniqueness of goodness proofs justifies having the definition of $B$ ignore the goodness proof $\good{a}$, since $\good{a}$ can have at most one value.
+Below, we prove that:
+\begin{enumerate}
+    \item The inhabitants of $\good{A}$ are unique only if UIP holds for the type $X$ (Lemma \ref{UIP-from-uniq-good}).
+    \item The simple elimination rules from Figure \ref{example-definition} hold for the $(A, B, \eta, \inj, \join)$ constructed above only if the inhabitants of $\good{A}$ are unique (Lemma \ref{uniq-good-from-simple-elim}).
+\end{enumerate}
+Therefore, \Forsberg/'s construction satisfies the simple elimination rules in intensional type theory only if UIP holds (Theorem \ref{Forsberg-gives-UIP}).
+
+\begin{subsection}{Unique Goodness only if UIP}
+
+We define notation $(x == y)$ to mean the term \[\pre{\join}\;(\pre{\eta}\;x)\;(\pre{\inj}\;(\pre{\eta}\;y)) : \pre{A}.\]
+We first prove that there at least as many proofs of $\good{A}\;(x == y)$ as there are of $\IdA{x}{y}{X}$.
+
+\begin{lemma}[$\IdA{x}{y}{X}$ is a retract of $\good{A}$]\label{XtoAtoX}
+    For all $x : X$ and $y : X$, there are functions \[f : \IdA{x}{y}{X} \to \good{A}\;(x == y),\qquad g : \good{A}\;(x == y) \to \IdA{x}{y}{X},\] such that for all $e : \IdA{x}{y}{X}$, $\Id{g\;(f\;e)}{e}$.
+\end{lemma}
+\begin{proof}
+    To define $f$, we let $f\;\refl =$ \[\good{\join}\;(\pre{\eta}\;x)\;(\good{\eta}\;x)\;(\pre{\inj}\;(\pre{\eta}\;x))\;(\good{\inj}\;(\pre{\eta}\;x)\;(\good{\eta}\;x)).\] To define $g$, pattern matching on $\good{a}$ has only one possibility: $\good{a} = $\[\good{\join}\;(\pre{\eta}\;x)\;(\good{\eta}\;x)\;(\pre{\inj}\;(\pre{\eta}\;x))\;(\good{\inj}\;(\pre{\eta}\;x)\;(\good{\eta}\;x)),\] forcing $y$ to be $x$, and in this case $\IdA{x}{y}{X}$ holds by reflexivity.
+    Then when $e = \refl$, $f\;e$ returns a proof in the format matched by $g$, so $\Id{g\;(f\;\refl)}{\refl}$, and thus $\Id{g\;(f\;e)}{e}$.
+\end{proof}
+
+\begin{lemma}[\label{UIP-from-uniq-good}Unique goodness only if UIP]
+    If the inhabitants of $\good{A}\;t$ are unique for all $t : \pre{A}$, then UIP holds for the type $X$.
+\end{lemma}
+\begin{proof}
+    Assume goodness proofs are unique, and take $x : X$, $y : X$, with $p : \Id{x}{y}$, $q : \Id{x}{y}$. We want to show that $\Id{p}{q}$. Using the $f$ and $g$ from Lemma \ref{XtoAtoX}, \begin{align*}
+    p &\equiv g\;(f\;p)&&\text{by Lemma \ref{XtoAtoX}}\\
+      &\equiv g\;(f\;q)&&\text{by uniqueness of $\good{A}\;(x == y)$, $\Id{f\;p}{f\;q}$}\\
+      &\equiv q&&\text{by Lemma \ref{XtoAtoX}}.
+    \end{align*}
+\end{proof}
+
+\end{subsection}
+
+\begin{subsection}{Simple Elimination Rules only if Unique Goodness}
+
+Now we prove that there are at least as many proofs of $B\;(\pre{t},\good{t})$ as there are of $\good{A}\;\pre{t}$.
+
+\begin{lemma}[$\good{A}$ is a retract of $B$]\label{AtoBtoA}
+    For all $\pre{t} : \pre{A}$ and $\good{t} : \good{A}\;\pre{t}$, there are functions \[f : \good{A}\;\pre{t} \to B\;(\pre{t},\good{t}),\qquad g : B\;(\pre{t},\good{t})\to \good{A}\;\pre{t}\] such that for all $\good{a} : \good{A}\;\pre{t}$, $\Id{g\;(f\;\good{a})}{\good{a}}$.
+\end{lemma}
+\begin{proof}
+    We define $f\;\good{a} = \pre{\inj}\;\pre{t}, \good{\inj}\;\pre{t}\;\good{a}$.
+    By induction on $\good{B}$, we define a function \[g' : (\pre{a} : \pre{A})\to(\pre{b}: \pre{B})\to\good{B}\;\pre{a}\;\pre{b}\to \good{A}\;\pre{a}\] taking \[g'\;\pre{a}\;(\pre{\inj}\;\pre{a})\;(\good{\inj}\;\pre{a}\;\good{a}) = \good{a}.\]
+    Then we can define $g\;(\pre{b},\good{b}) = g'\;\pre{t}\;\pre{b}\;\good{b}$.
+    Then $\Id{g\;(f\;\good{a})}{\good{a}}$ holds by reflexivity.
+\end{proof}
+
+\begin{lemma}[$B$ is contractible]\label{Bcontr}
+    Assuming the simple elimination rules from Figure \ref{example-definition} hold for the $(A, B, \eta, \inj, \join)$ constructed above, for all $a : A$ and $b : B\;a$, $\IdA{\inj\;a}{b}{B\;a}$
+\end{lemma}
+\begin{proof}
+    Referring to the simple elimination rules given in Figure \ref{example-definition}, we pattern match on $B$ by giving motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$, and then using the resulting $EB$.
+    
+    We set $PA\;a = \top$, $P\eta\;x = \star$, and $P\join\;a\;\star\;b\;IH = \star$.
+    Then we can take $PB\;a\;b$ to be $\IdA{\inj\;a}{b}{B\;a}$, at which point $P\inj\; a\;\star : \IdA{\inj\;a}{\inj\;a}{B\;a}$ holds by reflexivity. The conclusion follows by $EB : (a : A) \to (b : B\;a) \to \IdA{\inj\;a}{b}{B\;a}$.
+\end{proof}
+
+\begin{lemma}[\label{uniq-good-from-simple-elim}Simple elimination rules only if unique goodness]
+    If the simple eliminators hold for the $(A,B,\eta,\inj,\join)$ constructed above, then for all $t : \pre{A}$, the inhabitants of $\good{A}\;t$ are unique.
+\end{lemma}
+\begin{proof}
+    Assume that the simple elimination rules hold, and take $t : \pre{A}$, and $a_1$ and $a_2$ in $\good{A}\;t$. We use the definition of $f$ and $g$ from Lemma \ref{AtoBtoA} with $\pre{t} = t$ and $\good{t} = a_1$.
+    
+    By Lemma \ref{Bcontr}, we know that \[\IdA{\inj\;(t, a_1)}{f\;a_2}{B\;(t, a_1)}.\] Applying $g$ to both sides, and recognizing that $g\;(\inj\;(t,a_1))$ computes to $a_1$, while $g\;(f\;a_2)$ computes to $a_2$ we find that \[a_1 = g\;(\inj\;(t,a_1)) \equiv_{\good{A}\;t} g\;(f\;a_2) = a_2.\]
+\end{proof}
+
+\end{subsection}
+
+\begin{subsection}{Simple Elimination Rules for \Forsberg/'s Construction only if UIP}
+
+\begin{theorem}\label{Forsberg-gives-UIP}
+    If the simple elimination rules hold for \Forsberg/'s construction, then UIP holds for the type $X$.
+\end{theorem}
+\begin{proof}
+    Compose the results of Lemma \ref{UIP-from-uniq-good} and Lemma \ref{uniq-good-from-simple-elim}.
+\end{proof}
+
+Therefore \Forsberg/'s approach to constructing inductive-inductive types requires UIP. Since UIP is inconsistent with the Univalence axiom at the center of Homotopy Type Theory (HoTT) \citep{hottbook}, we have an incentive to come up with a different construction which is consistent with HoTT.
+
+\end{subsection}
+
+\end{section}
+
+\begin{section}{Constructing an Inductive-Inductive Type in Cubical Type Theory}\label{example-construct-cubical}
+
+Cubical type theory \citep{cubicaltt_ifcolog} is a recently developed type theory which gives a constructive interpretation of the Univalence axiom of Homotopy Type Theory. It has an implementation as a mode for Agda \citep{AddingCubesToAgda}, which we use to formalize the construction of the running example given in this section.
+
+The most important difference between cubical type theory and standard intensional type theory as implemented by Coq or vanilla Agda is that the identity type $\IdA{x}{y}{X}$ is represented (loosely speaking) by the type of functions $p$ from an interval type $\II$ with two endpoints $i_0$ and $i_1$ to $X$ such that $p\;i_0$ reduces to $x$ and $p\;i_1$ reduces to $y$. This allows, for example, a trivial proof of function extensionality: if we have $A : \USet$, $B : A\to \USet$, $f$ and $g$ functions of type $(a : A) \to B\;a$, and $h : (a : A) \to \Id{f\;a}{g\;a}$, then we have $(\lambda i.\lambda a.h\;a\;i) : \Id{f}{g}$. Taking $\text{cong}\; f = \lambda p. \lambda i. f\; (p\;i) : \Id{x}{y} \to \Id{f\;x}{f\;y}$ and $\circ$ for function composition, we also have nice properties such as $(\text{cong}\; f) \circ (\text{cong}\; g) = \text{cong}\; (f \circ g)$.
+
+In this section, we will construct the running example from Figure \ref{example-definition}, along with the simple elimination rules, in cubical type theory. Our construction will proceed in several steps:
+\begin{itemize}
+    \item In \S\ref{ex-pre-syntax}, we approximate by dropping the indices, leaving a standard mutual inductive definition called the \emph{pre-syntax}. This is the same as the pre-syntax given in Figure \ref{example-pre-syntax}.
+    \item In \S\ref{ex-goodness-algebra}, we define \emph{goodness algebras}, collections of predicates over the pre-syntax which define the index relationship (analogously to $\good{A}$ and $\good{B}$ from \S\ref{derivingUIP}). We also show that some goodness algebra exists, and call it $\bbO$.
+    \item In \S\ref{ex-niceness}, we define a predicate \emph{nice} on goodness algebras, such that if we have a nice goodness algebra, then we can construct the simple elimination rules. Being nice is similar to having proofs of goodness be unique as in \S\ref{derivingUIP}.
+    \item In \S\ref{ex-successor-alg}, we use pattern matching over the pre-syntax to define a function $S$ from goodness algebras to goodness algebras.
+    \item In \S\ref{ex-limit-alg}, we define the limit of the sequence \[\bbO, S\;\bbO, S\;(S\;\bbO), \dots, S^n\;\bbO,\dots\] and show that it is nice.
+\end{itemize}
+Given the nice goodness algebra in \S\ref{ex-limit-alg} we can then construct the simple elimination rules by \S\ref{ex-niceness}. This construction has been formalized in Agda (version 2.6.0 commit \texttt{bd338484d}) using the \texttt{--cubical} flag which implies \texttt{--without-K} (see \texttt{RunningExample.agda}).
+
+The intuition for our construction is that the approach of pairing an approximation with goodness predicates can be repeated, and each time the approximation gets better. Using HoTT terminology, while one iteration only works if $X$ has homotopy level 0 (is a homotopy set, satisfies UIP) as we saw in \S\ref{derivingUIP}, two iterations of the construction work if $X$ has homotopy level 1, and $n+1$ iterations work if $X$ has homotopy level $n$. The successor goodness algebra defined in \S\ref{ex-successor-alg} is a slightly simplified version of \Forsberg/'s construction, and taking the limit (in \S\ref{ex-limit-alg}) gives a construction which works for arbitrary homotopy levels.
+
+\erase{We will follow the same sequence of steps in \S\ref{construct-cubical}, where we perform the construction for arbitrary inductive-inductive definitions.}
+
+\begin{subsection}{Pre-syntax}\label{ex-pre-syntax}
+
+The pre-syntax is defined as the mutually inductive type, with sorts $\pre{A}$ and $\pre{B}$, and constructors $\pre{\eta}$, $\pre{\join}$, and $\pre{\inj}$ as given in Figure \ref{example-pre-syntax}. The constructors of the pre-syntax have the same types as the constructors of the full inductive-inductive definition (given in Figure \ref{example-definition}), except we replace $B\;a$ with $\pre{B}$ everywhere, ignoring the dependence of $B$ on $A$.
+
+Consider this as the closest approximation of the target inductive-inductive type by a standard inductive type; the dependence of $B$ on $A$ is the only new element that inductive-inductive definitions add. Of course, this is only an approximation. We can form elements of the pre-syntax, such as \[\pre{\join}\;(\pre{\eta}\;x)\;(\pre{\inj}\;(\pre{\eta}\;y))\] for $x \neq y$ that should be excluded from the inductive-inductive formulation, since $\inj\;(\eta\;y) : B\;(\eta\;y)$ while $\join\;(\eta\;x) : B\;(\eta\;x) \to A$.
+
+We will use definition by pattern matching and by induction on the pre-syntax later in our construction.
+
+\end{subsection}
+
+\begin{subsection}{Goodness Algebras}\label{ex-goodness-algebra}
+
+As we saw in \S\ref{ex-pre-syntax}, the pre-syntax is too lenient, and contains terms we want to exclude from the inductive-inductive object. In this section, we define a notion of `sub-algebra' of the pre-syntax, which we will call a \emph{goodness algebra}, and explain how to combine a goodness algebra with the pre-syntax to get an inductive-inductive object $(A, B, \eta, \join, \inj)$. We also define a goodness algebra $\bbO$. In \S\ref{ex-niceness}, we will describe a property (niceness) of goodness algebras such that the resulting inductive-inductive object satisfies the simple elimination rules, and in \S\ref{ex-limit-alg}, we will define a specific goodness algebra which is nice.
+
+\begin{figure}[htb]\begin{flushleft}
+
+For our running example from Figure \ref{example-definition}, a goodness algebra is the type of tuples of \[\delta^G = (\delta^G.A, \delta^G.B, \delta^G.\eta, \delta^G.\join, \delta^G.\inj)\] with the types defined below. Simultaneously, we define how to combine a goodness algebra $\delta^G$ with the pre-syntax to construct an inductive-inductive object $(A, B, \eta, \join, \inj)$.
+\begin{align*}
+\Ix A &= \top,\\
+\delta^G.A &:\; \Ix A \to \pre{A} \to \USet,\\
+A &= (a : \pre{A}) \times \delta^G.A\;\star\;a\\
+\\[-.11in]
+\Ix B &= A,\\
+\delta^G.B &:\; \Ix B \to \pre{B} \to \USet,\\
+B\;\phi &= (b : \pre{B}) \times \delta^G.B\;\phi\;b,\\
+\\[-.11in]
+\Arg \eta\;x\;\phi &= \top \times \IdA{\star}{\phi}{\Ix A},\\
+\delta^G.\eta &:\; (x : X) \to (\phi : \Ix A) \to \Arg \eta \;x\;\phi \to \delta^G.A\;\phi\;(\pre{\eta}\;x),\\
+\eta\;x &= \pre{\eta}\;x,\; \delta^G.\eta\;x\;\star\;(\star,\refl),\\
+\\[-.11in]
+\Arg \join\;(a,b)\;\phi &= ((a^G : \delta^G.A\;\star\;a) \times \delta^G.B\;(a,a^G)\;b) \times\IdA{\star}{\phi}{\Ix A},\\
+\delta^G.\join &:\; (p : \pre{A} \times \pre{B}) \to (\phi : \Ix A) \to\\&\;\;\; \Arg\join\;p\;\phi \to \delta^G.A\;\phi\;(\pre{\join}\;p),\\
+\join&\;((\pre{a}, \good{a}), (\pre{b}, \good{b})) =\\&\qquad\pre{\join}\;\pre{a}\;\pre{b},\; \delta^G.\join\;(\pre{a}, \pre{b})\;\star\;((\good{a}, \good{b}),\refl),\\
+\\[-.11in]
+\Arg \inj\;a\;\phi &= (a^G : \delta^G.A\;\star\;a) \times \IdA{(a , a^G)}{\phi}{\Ix B},\\
+\delta^G.\inj &:\; (a : \pre{A}) \to (\phi : \Ix B) \to \Arg\inj\;a\;\phi \to \delta^G.B\;\phi\;(\pre{\inj}\;a),\\
+\inj\;(\pre{a}, \good{a}) &= \pre{\inj}\;\pre{a},\; \delta^G.\inj\;\pre{a}\;(\pre{a}, \good{a})\;(\good{a}, \refl).
+\end{align*}
+\end{flushleft}
+\caption{\label{example-goodness-algebra-def}Goodness algebras}
+\end{figure}
+
+In Figure \ref{example-goodness-algebra-def}, for each clause of the inductive-inductive specification, we define 3 things:
+\begin{enumerate}
+    \item A helper type, either $\Ix$ for sorts or $\Arg$ for operations.
+    \item The type of the corresponding component in the goodness algebra. For sorts, this is a predicate relating $\Ix$ and the pre-syntax, while for the operations, this is a function witnessing that each element of $\Arg$ gives a goodness proof relating the index $\phi$ to the pre-syntax.
+    \item A way to combine the goodness algebra with the pre-syntax to form an inductive-inductive object. For sorts, we pair the pre-syntax with a goodness proof, while for operations we apply the operation given by the goodness algebra.
+\end{enumerate}
+
+Comparing this definition to the construction in \S\ref{derivingUIP}, the mutual inductive definition of $\good{A}$ and $\good{B}$ in \S\ref{derivingUIP} has types equivalent to what results if the dependence of $\delta^G.B$ on $\delta^G.A$ (defined in Figure \ref{example-goodness-algebra-def}) is dropped, going from \[\delta^G.B : (a : \pre{A}) \times \delta^G.A\;\star\;a \to \pre{B} \to \USet \quad\text{to}\quad \good{B} : \pre{A} \to \pre{B} \to \USet.\] The other difference is that we replace the inductive index (call it $s$) in the conclusion by a fresh variable $\phi$, with the condition $s = \phi$ included in $\Arg$.
+
+Finally, we define the goodness algebra $\bbO$ by%\vspace{-0.1in}
+\begin{gather*}
+\bbO.A\;\phi\;a = \top,\qquad
+\bbO.B\;\phi\;b = \top,\\
+\bbO.\eta\;x\;\phi\;t = \star,\qquad
+\bbO.\join\;(a, b)\;\phi\;t = \star,\qquad
+\bbO.\inj\;a\;\phi\;t = \star.
+\end{gather*}
+
+\erase{
+Consider the sort $B$. The inductive index of $B$ is $a : A$, so we set $\Ix B = A$. Our goodness algebra has a predicate $\delta^G.B : \Ix B \to \pre{B} \to \USet$, which defines a relation between the inductive index and the pre-syntax. And we define an elements of $B\;\phi$ to be pairs of pre-syntax with a proof that it is related to $\phi$ by the goodness algebra. The definition of the sort $A$ follows the same pattern, but there $A$ has no inductive index, or rather has $\top$ as the inductive index, so we set $\Ix A = \top$.
+
+In order to provide operations on the sorts thus defined, our goodness algebra also has clauses for each operation $\eta$, $\join$, and $\inj$. Consider \[\inj\;(\pre{a}, \good{a}) : B\;(\pre{a}\;\good{a}) = (b : \pre{B}) \times \delta^G.B\;(\pre{a}, \good{a})\;b.\] We can give the first component easily, the pre-syntax gives us $\pre{\inj}\;\pre{a} : \pre{B}$. For the second component, we need the goodness algebra to give us a function \[\delta^G.A\;\star\;\pre{a} \to \delta^G.B\;(\pre{a}, \good{a})\;(\pre{\inj}\;\pre{a}).\] Feeding in $\good{a}$ then gives us the second component we need to define $\inj$. However, in \S\ref{ex-niceness} it will be convenient to characterize $\delta^G.B\;\phi\;(\pre{\inj}\;\pre{a})$ for any $\phi : A$ as equivalent to \[\Arg \inj\;a\;\phi = (a^G : \delta^G.A\;\star\;a) \times \IdA{(a , a^G)}{\phi}{\Ix B}.\] Therefore, we abstract over $\phi$ in the premise of $\delta^G.\inj$ but constrain $\phi$ to be equal to $(\pre{a}, \good{a})$ in $\Arg\inj$, and plug in reflexivity for the proof of the equality when defining $\inj$.
+}
+
+\end{subsection}
+
+\begin{subsection}{Niceness}\label{ex-niceness}
+
+We want to identify a property \emph{niceness} that is sufficient for a goodness algebra to produce an inductive-inductive object $(A, B, \eta, \join, \inj)$ which satisfies the simple elimination rules, as given in Figure \ref{example-definition}.
+
+To define niceness, we use the concept of equivalence, as defined in \citet{hottbook} (\S4.4 Contractible fibers). Given a function $f : A \to B$, we write $\isEquiv\;f$ (leaving $A$ and $B$ implicit) to denote that $f$ is an equivalence between $A$ and $B$. We will also write $A \simeq B$ for the type of pairs of such a function $f$ with a proof that $f$ is an equivalence.
+
+\erase{
+\begin{lemma}[\label{equiv-pullback}Pullback over equivalence.]
+    If $f$ is an equivalence between $A$ and $B$, $P : B \to \USet$ is a predicate on $B$, and we know $h : (a : A) \to P\;(f\;a)$, then there is a function $p : (b : B) \to P\;b$ such that $\Id{p\;(f\;a)}{h\;a}$ for all $a$.
+\end{lemma}
+\begin{proof}
+    Immediate from the definition of equivalences as functions with contractible fibers.
+\end{proof}
+
+We will also need to eliminate equality proofs. The standard eliminator for equality is \begin{align*}J :&\; (A : \USet) \to (x : A) \to (P : (y : A) \to \Id{x}{y} \to \USet) \to P\;x\;\refl \to\\&\; (y : A) \to (p : \Id{x}{y}) \to P\;y\;p,\\J\text{-comp}&\;A\;x\;P\;H : \Id{J\;A\;x\;P\;H\;x\;\refl}{H}.\end{align*} In cubical type theory as currently implemented by Agda, $J\text{-comp}$ does not hold definitionally, but is provable.
+}
+
+We will say that a goodness algebra is \emph{nice} if we have equivalence proofs $(\delta^N.\eta, \delta^N.\join, \delta^N.\inj)$, with types \begin{align*}
+\delta^N.\eta\;x\;\phi &: \isEquiv\;(\delta^G.\eta\;x\;\phi),\\
+\delta^N.\join\;(a, b)\;\phi &: \isEquiv\;(\delta^G.\join\;(a, b)\;\phi),\\
+\delta^N.\inj\;a\;\phi &: \isEquiv\;(\delta^G.\inj\;a\;\phi).
+\end{align*}
+
+Equivalences between types are very close to equalities between types (the Univalence axiom makes this precise). If we have a \emph{nice} goodness algebra, we have what looks similar to a recursive definition:
+\begin{align*}
+\delta^G.A &: \top \to \pre{A} \to \USet,\\
+\delta^G.B &: (a : \pre{A}) \times \delta^G.A\;\star\;a \to \pre{B} \to \USet,\\
+\delta^G.A\;\phi\;(\pre{\eta}\;x) &\simeq \Arg\eta\;x\;\phi,\\
+\delta^G.A\;\phi\;(\pre{\join}\;a\;b) &\simeq \Arg\join\;(a, b)\;\phi,\\
+\delta^G.B\;\phi\;(\pre{\inj}\;a) &\simeq \Arg\inj\;a\;\phi.
+\end{align*}
+However, the dependence of $\delta^G.B$ on $\delta^G.A$ makes this what \Forsberg/ calls a `recursive-recursive' definition. It is not immediately clear how to construct a solution to this system; we will expend much effort to do so in \S\ref{ex-limit-alg}. However, once we have a solution, the inductive-inductive object produced by the goodness algebra will satisfy the simple elimination rules.
+
+\begin{lemma}[\label{example-nice-gives-simple-elim}Nice goodness algebras give simple elimination rules]
+    Given a goodness algebra $\delta^G$ with proof of niceness $\delta^N$, the inductive-inductive object $(A, B, \eta, \join, \inj)$ produced from $\delta^G$ as specified in \S\ref{ex-goodness-algebra} satisfies the simple induction rules given in Figure \ref{example-definition}.
+\end{lemma}
+\begin{proof}
+
+The proof is formalized as Lemma 5.2 in \texttt{RunningExample.agda}. The main idea of the proof is to induct on the pre-syntax, and exploit the equivalences provided by niceness. In the $\inj$ case for example, we have a proof of $\delta^G.B\;\phi\;(\pre{\inj}\;a)$. But without loss of generality, we can replace that goodness proof with $\delta^G.\inj$ applied to an element of $\Arg\inj\;a\;\phi$, which contains both a proof $\good{a} : \delta^G.A\;\star\;a$ and a proof that $\Id{(a, \good{a})}{\phi}$. Using $J$ to eliminate that equality leaves a goal to which the provided simple induction step for $\inj$ applies.
+
+\erase{
+Assume motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$
+\begin{align*}
+PA :&\; A \to \USet,\\
+PB :&\; (a : A) \to B\;a\to \USet,\\
+P\eta :&\; (x : X) \to PA\;(\eta\;x),\\
+P\join :&\; (a : A) \to PA\;a\to (b : B\;a) \to PB\;a\;b \to PA\;(\join\;a\;b),\\
+P\inj :&\; (a : A) \to PA\;a\to PB\;a\;(\inj\;a).
+\end{align*}
+We need to produce eliminators $(EA, EB)$ satisfying equalities $(E\eta, E\join, E\inj)$.
+\begin{align*}
+EA :&\; (a : A) \to PA\;a,\\
+EB :&\; (a : A) \to (b : B\;a) \to PB\;a\;b,\\
+E\eta :&\; (x : X) \to \IdA{EA\;(\eta\;x)}{P\eta\;x}{PA\;(\eta\;x)},\\
+E\join :&\; (a : A) \to (b : B\;a) \to \IdA{EA\;(\join\;a\;b)}{P\join\;a\;(EA\;a)\;b\;(EB\;a\;b)}{PA\;(\join\;a\;b)},\\
+E\inj :&\; (a : A) \to \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.
+\end{align*}
+Keep in mind the definitions in Figure \ref{example-goodness-algebra-def}.
+Since we have defined \[A = (a : \pre{A}) \times \delta^G.A\;\star\;a,\qquad B\;\phi = (b : \pre{B})\times\delta^G\;\phi\;b,\] up to currying it is sufficient to define \[EA : (\pre{a} : \pre{A}) \to (\good{a} : \delta^G.A\;\star\;\pre{a}) \to PA\;(\pre{a}, \good{a}),\]\[EB : (\pre{b} : \pre{B}) \to (\phi : A) \to (\good{b} : \delta^G.B\;\phi\;(\pre{b}, \good{b})) \to PB\;\phi\;(\pre{b}, \good{b}),\] and we will do so by induction on the pre-syntax.
+\begin{itemize}
+\item When $\pre{a} = \pre{\eta}\;x$, we can let $\phi = \star$ and apply Lemma \ref{equiv-pullback} with $\delta^N.\eta\;x\;\phi$ to only consider \[\good{a} = \delta^G.\eta\;x\;\phi\;(\star, p),\quad\text{ for some }\quad(\star, p) : \Arg\eta\;x\;\phi = \top \times \Id{\star}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = (\star, \refl)$, and we have to prove \[PA\;(\pre{\eta}\;x, \delta^G.\eta\;x\;\star\;(\star, \refl)) = PA\;(\eta\;x),\] which we can do with $P\eta\;x$.
+\item When $\pre{a} = \pre{\join}\;a\;b$, we can let $\phi = \star$ and apply Lemma \ref{equiv-pullback} with $\delta^N.\join\;(a, b)\;\phi$ to only consider \[\good{a} = \delta^G.\join\;(a,b)\;\phi\;((\good{a}, \good{b}), p),\quad\text{ for some }\]\[((\good{a}, \good{b}), p) : \Arg\join\;(a, b)\;\phi = ((\good{a} : \delta^G.A\;\star\;a) \times \delta^G.B\;(a, \good{a})\;b) \times \Id{\star}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = (\star, \refl)$, and we have to prove \[PA\;(\pre{\join}\;a\;b, \delta^G.\join\;(a, b)\;\star\;((\good{a}, \good{b}),\refl) = PA\;(\join\;(a, \good{a})\;(b, \good{b})).\] As long as we can prove the induction hypotheses $PA\;(a, \good{a})$ and $PB\;(a, \good{a})\;(b, \good{b})$, we can use $P\join$ to do so. And since $a$ and $b$ are sub-terms of $\pre{\join}\;a\;b$, we can use $EA\;a\;\good{a}$ and $EB\;b\;(a, \good{a})\;\good{b}$ to satisfy the induction hypotheses.
+\item When $\pre{b} = \pre{\inj}$, given $\phi$, we can apply Lemma \ref{equiv-pullback} with $\delta^N.\inj\;a\;\phi$ to only consider \[\good{b} = \delta^G.\inj\;a\;\phi\;(\good{a}, p)\quad\text{for some}\]\[(\good{a}, \phi) : \Arg\inj\;a\;\phi = (\good{a} : \delta^G.A\;\star\;a) \times \Id{(a, \good{a})}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = ((a, \good{a}), \refl)$, and we have to prove \[PB\;(a, \good{a})\;(\pre{\inj}\;a, \delta^G.\inj\;a\;(a, \good{a})\;(\good{a}, \refl)) = PB\;(a, \good{a})\;(\inj\;(a, \good{a})).\] As long as we can prove the induction hypothesis $PA\;(a, \good{a})$, we can use $P\inj$ to do so. And since $a$ is a sub-term of $\pre{\inj}\;a$, we can use $EA\;a\;\good{a}$ to satisfy the induction hypothesis.
+\end{itemize}
+This completes the definition of $EA$ and $EB$. They satisfy the equalities $E\eta$, $E\join$, and $E\inj$, though not by computation, because we are pulling back over an equality when we start at a point in the image, and apply $J$ to $\refl$. Therefore a nice goodness algebra gives the simple elimination rules.
+}
+
+\end{proof}
+
+\end{subsection}
+
+\begin{subsection}{Successor Goodness Algebra}\label{ex-successor-alg}
+We are trying to create a nice goodness algebra by taking the limit of successive approximations, so we need a step function, which we will call $S$, that takes a goodness algebra $\delta^G$ and returns a new goodness algebra $S\;\delta^G$, which is closer in some sense to being nice. We do so by pattern matching on the pre-syntax to unroll one level of the recurrence equations niceness encodes.
+
+We define by pattern matching \begin{align*}
+(E\;\delta^G).A : (a : \pre{A}) &\to (\phi : \Ix A\;\delta^G) \to (Y : \USet) \times (Y \to \delta^G.A\;\phi\;a),\\
+(E\;\delta^G).B : (b : \pre{B}) &\to (\phi : \Ix B\;\delta^G) \to (Y : \USet) \times (Y \to \delta^G.B\;\phi\;b),\\
+(E\;\delta^G).A\;(\pre{\eta}\;x) &= \lambda \phi. \Arg\eta\;x\;\phi, \delta^G.\eta\;x\;\phi,\\
+(E\;\delta^G).A\;(\pre{\join}\;a\;b) &= \lambda \phi. \Arg\join\;(a, b)\;\phi, \delta^G.\join\;(a, b)\;\phi,\\
+(E\;\delta^G).B\;(\pre{\inj}\;a) &= \lambda \phi. \Arg\inj\;a\;\phi, \delta^G.\inj\;a\;\phi,
+\end{align*}
+which gives a new property $Y$ which maps back to $\delta^G.B\;\phi\;b$ for each $b$ and $\phi$, and similarly for $A$.
+
+Then, in Figure \ref{example-successor-algebra-def}, we define the new goodness algebra $(S\;\delta^G)$ along with projection functions $(\delta^\pi\;\delta^G)$ which take $\Ix$ and $\Arg$ from $(S\;\delta^G)$ to $\delta^G$.
+
+\begin{figure}[htpb]\begin{flushleft}
+
+We define the successor algebra $(S\;\delta^G)$ along with projection functions $(\delta^\pi\;\delta^G)$ by:
+\begin{align*}
+(\delta^\pi\;\delta^G).A &: \Ix A\;(S\;\delta^G) \to \Ix A\;\delta^G,\\
+(\delta^\pi\;\delta^G).A &= \lambda \star. \star,\\
+(S\;\delta^G).A\;\phi\;a &= (E\;\delta^G).A\;a\;((\delta^\pi\;\delta^G).A\;\phi)\;.1,\\
+\\[-.15in]
+(\delta^\pi\;\delta^G).B &: \Ix B\;(S\;\delta^G) \to \Ix B\;\delta^G,\\
+(\delta^\pi\;\delta^G).B &= \lambda (\pre{a}, \good{a}). (\pre{a}, (E\;\delta^G).A\;\pre{a}\;\star\;.2\;\good{a}),\\
+(S\;\delta^G).B\;\phi\;b &= (E\;\delta^G).B\;b\;((\delta^\pi\;\delta^G).B\;\phi)\;.1,\\
+\\[-.15in]
+(\delta^\pi\;\delta^G).\eta\;x\;\phi &: \Arg\eta\;(S\;\delta^G)\;x\;\phi \to \Arg\eta\;\delta^G\;x\;((\delta^\pi\;\delta^G).A\;\phi),\\
+(\delta^\pi\;\delta^G).\eta\;x\;\phi &= \lambda(\star, p).(\star, \text{cong}\;((\delta^\pi\;\delta^G).A)\;p),\\
+(S\;\delta^G).\eta\;x\;\phi &= (\delta^\pi\;\delta^G).\eta\;x\;\phi,\\
+\\[-.15in]
+(\delta^\pi\;\delta^G).\join\;(a, b)\;\phi &: \Arg\join\;(S\;\delta^G)\; (a, b)\;\phi \to \Arg\join\;\delta^G\;(a, b)\;((\delta^\pi\;\delta^G).A\;\phi),\\
+(\delta^\pi\;\delta^G).\join\;(a, b)\;\phi &= \lambda((\good{a}, \good{b}), p).\text{ let $a^G$ := $(E\;\delta^G).A\;a\;\star\;.2\;\good{a}$ in}\\& ((a^G, (E\;\delta^G).B\;b\;(a, a^G)\;.2\;\good{b}), \text{cong}\;((\delta^\pi\;\delta^G).A)\;p),\\
+(S\;\delta^G).\join\;(a, b)\;\phi &= (\delta^\pi\;\delta^G).\join\;(a, b)\;\phi,\\
+\\[-.15in]
+(\delta^\pi\;\delta^G).\inj\;a\;\phi &: \Arg\inj\;(S\;\delta^G)\;a\;\phi \to \Arg\inj\;\delta^G\;a\;((\delta^\pi\;\delta^G).B\;\phi),\\
+(\delta^\pi\;\delta^G).\inj\;a\;\phi &= \lambda(\good{a}, p). ((E\;\delta^G).A\;a\;\star\;.2\;\good{a}, \text{cong}\;((\delta^\pi\;\delta^G).B)\;p),\\
+(S\;\delta^G).\inj\;a\;\phi &= (\delta^\pi\;\delta^G).\inj\;a\;\phi.
+\end{align*}
+\end{flushleft}
+\caption{\label{example-successor-algebra-def}Successor goodness algebra}
+\end{figure}
+
+The projection functions $(\delta^\pi\;\delta^G)$ consist of applying the map given by the second component of $(E\;\delta^G)$ everywhere in sight. The sorts are then defined by the first component of $(E\;\delta^G)$ (using the projection function to fix up the index), while the operations can be defined to be the corresponding projection function itself.
+
+Concretely, for the sort $B$, we define $(\delta^\pi\;\delta^G).B$ to map between $\Ix B\; (S \delta^G)$ and $\Ix B\;\delta^G$. This consists of applying the function $((E\;\delta^G).A\;\pre{a}\;\star\;.2)$ to $\good{a}$ which we defined by pattern matching above. Then, since $(S\;\delta^G).B$ gets an inductive index $\phi$ in $(S\;\delta^G)$ but $((E\;\delta^G)\;b\;\phi\;.1)$ is expecting an inductive index in $\delta^G$, we span the gap with the projection function $(\delta^\pi\;\delta^G).B$ just defined. The definition of $A$ follows the same pattern, but the definition of $(\delta^\pi\;\delta^G).A$ is even simpler because $\Ix A = \top$ regardless of what goodness algebra we are working in.
+
+For the operations, consider $\inj$. Like with the sorts, we first define a projection function $(\delta^\pi\;\delta^G).\inj\;a\;\phi$, which maps from $\Arg\inj\;(S\;\delta^G)$ to $\Arg\inj\;\delta^G$, and we fix up the inductive index $\phi$ with $(\delta^\pi\;\delta^G).B$. For the first component of $\Arg$, we use the function given by the second component of $(E\;\delta^G).A$ to fix up $\good{a}$. For the second component, applying the projection $(\delta^\pi\;\delta^G).B$ to the equality proof works out on the left hand side because all these projection functions are doing the same thing: applying the function given by the second component of $(E\;\delta^G)$ everywhere. Finally, we can define $(S\;\delta^G).\inj = (\delta^\pi\;\delta^G).\inj$, because $(S\;\delta^G).\inj\;a\;\phi$ is supposed to have codomain \[(S\;\delta^G).B\;\phi\;(\pre{\inj}\;a)\] which is defined to be \[(E\;\delta^G).B\;(\pre{\inj}\;a)\;((\delta^\pi\;\delta^G).B\;\phi)\;.1\] which reduces on $(\pre{\inj}\;a)$ to \[\Arg\inj\;\delta^G\;a\;((\delta^\pi\;\delta^G).B\;\phi),\] which is exactly the codomain of $(\delta^\pi\;\delta^G).\inj\;a\;\phi$.
+
+\end{subsection}
+
+\begin{subsection}{Limit of Goodness Algebras}\label{ex-limit-alg}
+
+We will now construct a nice goodness algebra by taking the limit of the sequence $\bbO, S\;\bbO, S\;(S\;\bbO), \dots$ and showing that it is nice. Here $S^n\;\bbO$ is defined recursively by \[S^0\;\bbO = \bbO,\qquad S^{1+n}\;\bbO = S\;(S^n\;\bbO).\]
+
+\begin{subsubsection}{Limit of Sets}
+    
+    For the formalization of this section, see \texttt{Chain.agda}.
+    
+    In order to take the limit of successive goodness algebras, we need to know how to work with \emph{chains} of types. Specifically, given $(X : \N \to \II \to \USet)$ and $\pi : (n : \N) \to X\;(n+1)\;i_0 \to X\;n\;i_1$, we consider the type \[\text{chain.t}\;X\;\pi = (f : (n : \N) \to X\;n\;i_0)\times((n : \N) \to \IdA{f\;n}{\pi\;n\;(f\;(n+1))}{X\;n}.\] If we have $x : \text{chain.t}\;X\;\pi$, then let $x.p$ denote the second projection.
+    
+    We take $X$ to be a whole line of types rather than a single type because it makes dependent chains easy: given \begin{gather*}A : \N\to \USet\qquad\text{with}\qquad f_A : (n : \N) \to A\;(1+n) \to A\;n\qquad \text{and}\\B : (n : \N) \to A\;n \to \USet\qquad\text{with}\\f_B : (n : \N) \to (a : A\;(1+n)) \to B\;(1+n)\;a \to B\;n\;(f_A\;n\;a),\end{gather*} we can form \begin{align*}LA &= \text{chain.t}\;(\lambda n.\lambda i. A\;n)\;f_A &&: \USet,\\LB &= \lambda a.\;\text{chain.t}\;(\lambda n.\lambda i. B\;n\;(a.p\;n\;i))\;(\lambda n. f_B\;n\;(a.p\;(1+n)\;i_0)) &&: LA \to \USet\end{align*} without needing to transport anything.
+    
+    This construction commutes with most type formers: dependent function types, dependent pair types, identity types, and constants. See the formalization for details.
+    
+    \erase{
+        \begin{lemma}[\label{limit-pair-commute}chain commutes with dependent pair]
+            Given \begin{align*}
+            X &: \N \to \II \to \USet,\\
+            \pi_X &: (n : N) \to X\;(1+n)\;i_0 \to X\;n\;i_1,\\
+            Y &: (n : \N) \to (i : \II) \to X\;n\;i \to \USet,\\
+            \pi_Y &: (n : \N) \to (x : X\;(1+n)\;i_0) \to Y\;(1+n)\;i_0\;x \to Y\;n\;i_1\;(\pi_X\;n\;x),\\
+            A &: \USet,\\
+            B &: A \to \USet,\\
+            e_A &: A \simeq \text{chain.t}\;X\;\pi_X,\\
+            e_B &: (a : A) \to B\;a \simeq \text{chain.t}\;(\lambda n.\lambda i.Y\;n\;i\;(e_A\;a\;.p\;n\;i))\;(\lambda n.\pi_Y\;n\;(e_A\;a\;.p\;(1+n)\;i_0)),
+            \end{align*}
+            then the following holds:
+            \begin{gather*}
+            (a : A) \times B\;a \simeq \text{chain.t}\;(\lambda n. \lambda i. (x : X\;n\;i)\times Y\;n\;i\;x)\;(\lambda n.\lambda (x, y).\pi_X\;n\;x, \pi_Y\;n\;x\;y).
+            \end{gather*}
+        \end{lemma}
+        
+        \begin{lemma}[\label{limit-Id-commute}chain commutes with identity types]
+            Given \begin{align*}
+            X &: \II \to \N \to \II \to \USet,\\
+            \pi &: (k : \II) \to (n : \N) \to X\;k\;(1+n)\;i_0 \to X\;k\;n\;i_1,\\
+            A &: \II \to \USet,\\
+            e &: (k : \II) \to A\;i \simeq \text{chain.t}\;(X\;k)\;(\pi\;k),
+            \end{align*}
+            then for all $x_0 : A\;i_0$ and $x_1 : A\;i_1$, we have \[\IdA{x_0}{x_1}{A} \simeq \text{chain.t}\;(\lambda n.\lambda i. \IdA{(e\;i_0\;x_0).p\;n\;i}{(e\;i_1\;x_1).p\;n\;i}{\lambda k.X\;k\;n\;i})\;(\lambda n.\lambda p.\lambda k.\pi\;k\;n\;(p\;k)).\]
+        \end{lemma}
+        
+        \begin{lemma}[\label{limit-const-commute}chain commutes with constants]
+            Given $A : \USet$, \[A \simeq \text{chain.t}\;(\lambda n.\lambda i.A)(\lambda n.\lambda a.a).\]
+        \end{lemma}
+    }
+    
+    We also prove a dependent version of the fact that the limit of a chain is equivalent to the limit of a shifted chain. The proof of the non-dependent version of that fact can be found in \citet{nonwellfoundedtrees} as Lemma 12.
+    
+    \begin{lemma}[\label{limit-sort-lemma}Dependent chain equivalent to shifted chain]
+        Given \begin{align*}
+        X &: \N \to \USet,\qquad
+        \pi_X : (n : \N) \to X\;(1+n) \to X\;n,\\
+        Y_0 &: (n : \N) \to X\;n \to \USet,\qquad
+        Y_1 : (n : \N) \to X\;n \to \USet,\\
+        f &: (n : \N) \to (x : X\;n) \to Y_1\;n\;x \to Y_0\;n\;x,\\
+        g &: (n : \N) \to (x : X\;(1+n)) \to Y_0\;(1+n)\;x \to Y_1\;n\;(\pi_X\;n\;x),\\
+        x &: \text{chain.t}\;(\lambda n.\lambda i.X\;n)\;\pi_X,
+        \end{align*}
+        and letting the $X$ arguments to $f$ and $g$ be implicit,
+        we can define the types \begin{align*}t &= \text{chain.t}\;(\lambda n.\lambda i.Y_0\;n\;(x.p\;n\;i))\;(\lambda n.\lambda y.f\;n\;(g\;n\;y)),\\t^+ &= \text{chain.t}\;(\lambda n.\lambda i.Y_1\;n\;(x.p\;n\;i))\;(\lambda n.\lambda y.g\;n\;(f\;(1+n)\;y)).\end{align*}
+        Applying $f$ component-wise gives a function from $t^+$ to $t$.
+        This function is an equivalence.
+    \end{lemma}
+    
+\end{subsubsection}
+
+
+\erase{
+We will proceed clause by clause, through $(L.A, L.B, L.\eta, L.\join, L.\inj)$.
+
+\begin{subsubsection}{Defining $L.A$}
+First, we define \[\Ix_\simeq.A : \Ix A\; L \simeq \text{chain.t}\;(\lambda n.\lambda i.\Ix A\;(S^n\;\bbO))\;(\lambda n.(\delta^\pi\;(S^n\;\bbO)).A)\] witnessing that $\Ix A$ commutes with chains by using Lemma \ref{limit-const-commute} with $\top$, since $\Ix A\;\delta^G = \top$ independent of $\delta^G$, and $(\delta^\pi\;(S^n\;\bbO)).A$ is the identity function.
+
+Now for each $\phi : \Ix A\;L$ and $a : \pre{A}$, letting $\phi' = \Ix_\simeq.A\;\phi$ we can use Lemma \ref{limit-sort-lemma} with \begin{align*}
+X\;n &= \Ix A\;(S^n\;\bbO),\\
+\pi_X\;n &= (\delta^\pi\;(S^n\;\bbO)).A,\\
+Y_0\;n\;\phi &= (S^n\;\bbO).A\;\phi\;a,\\
+Y_1\;n\;\phi &= (E\;(S^n\;\bbO)).A\;a\;\phi\;.1,\\
+f\;n\;\phi &= (E\;(S^n\;\bbO)).A\;a\;\phi\;.2,\\
+g\;n\;\phi &= \lambda y.y,\\
+x &= \phi',
+\end{align*}
+to define $L.A\;\phi\;a$ to be $t$ from the statement of the lemma, with $t_\simeq.A\;\phi\;a$ of type \begin{gather*}
+\text{chain.t}\;(\lambda n.\lambda i.(E\;(S^n\;\bbO)).A\;a\;(\phi'.p\;n\;i)\;.1)\;(\lambda n.(E\;(S^{1+n}\;\bbO)).A\;a\;(\phi'.p\;(1+n)\;i_0)\;.2)\\\simeq\\L.A\;\phi\;a
+\end{gather*} defined from the result. We can take \[g\;n\;\phi : (S\;(S\;\bbO)).A\;\phi\;a \to (E\;(S^n\;\bbO)).A\;a\;((\delta^\pi\;(S^n\;\bbO)).A\;\phi)\;.1\] to be the identity because the domain and codomain are equal by the definition of $(S\;(S^n\;\bbO)).A$ (see \ref{ex-successor-alg}).
+\end{subsubsection}
+
+\begin{subsubsection}{Defining $L.B$}
+Now we work on defining $L.B$, which proceeds much the same as $L.A$.
+We define \[\Ix_\simeq.B : \Ix B\;L \simeq \text{chain.t}\;(\lambda n.\lambda i.\Ix B\;(S^n\;\bbO))\;(\lambda n.(\delta^\pi\;(S^n\;\bbO)).B)\] witnessing that $\Ix B$ commutes with chains by remembering that $\Ix B\;\delta^G = (a : \pre{A}) \times \delta^G.A\;\star\;a$, so we apply Lemma \ref{limit-pair-commute} to split into a proof that \[\pre{A} \simeq \text{chain.t}\;(\lambda n.\lambda i. \pre{A})\;(\lambda n.\lambda a.a)\] (discharged by Lemma \ref{limit-const-commute}) and, for all $a : \pre{A}$, a proof that \[L.A\;\star\;a \simeq \text{chain.t}\;(\lambda n.\lambda i.(S^n\;\bbO).A\;\star\;a)\;(\lambda n.(E\;(S^n\;\bbO)).A\;a\;\star\;.2)\] (discharged by noting that $L.A\;\star\;a$ is defined to be equal to the right side, and equivalence is a reflexive relation).
+
+Now for each $\phi : \Ix B\;L$ and $b : \pre{B}$, letting $\phi' = \Ix_\simeq.B\;\phi$ we can use Lemma \ref{limit-sort-lemma} with \begin{align*}
+X\;n &= \Ix B\;(S^n\;\bbO),\\
+\pi_X\;n &= (\delta^\pi\;(S^n\;\bbO)).B,\\
+Y_0\;n\;\phi &= (S^n\;\bbO).B\;\phi\;b,\\
+Y_1\;n\;\phi &= (E\;(S^n\;\bbO)).B\;b\;\phi\;.1,\\
+f\;n\;\phi &= (E\;(S^n\;\bbO)).B\;b\;\phi\;.2,\\
+g\;n\;\phi &= \lambda y.y,\\
+x &= \phi',
+\end{align*}
+to define $L.B\;\phi\;b$ to be $t$ from the statement of the lemma, with $t_\simeq.B\;\phi\;b$ of type \begin{gather*}
+\text{chain.t}\;(\lambda n.\lambda i.(E\;(S^n\;\bbO)).B\;b\;(\phi'.p\;n\;i)\;.1)\;(\lambda n.(E\;(S^{1+n}\;\bbO)).B\;b\;(\phi'.p\;(1+n)\;i_0)\;.2)\\\simeq\\L.B\;\phi\;b
+\end{gather*} defined from the result.
+\end{subsubsection}
+
+\begin{subsubsection}{Defining $L.\eta$}
+To define $L.\eta$, given $x : X$ and $\phi : \Ix A\;L$, we let $\phi' = \Ix_\simeq.A\;\phi$ and define $\Arg_\simeq^+.\eta\;x\;\phi$ witnessing that $\Arg\eta$ commutes with chains, having type
+\begin{gather*}
+\Arg\eta\;L\;x\;\phi\\
+\simeq\\
+\text{chain.t}\;(\lambda n.\lambda i.\Arg\eta\;(S^n\;\bbO)\;x\;(\phi'.p\;n\;i))\;(\lambda n.(\delta^\pi\;(S^{n+1}\;\bbO)).\eta\;x\;(\phi'.p\;(1+n)\;i_0))
+\end{gather*} using the lemmas from \S\ref{ex-chain}. Since we have defined \[\Arg\eta\;x\;\phi = \top \times \IdA{\star}{\phi}{\Ix A},\] we use Lemma \ref{limit-pair-commute} to distribute over the pair, then Lemma \ref{limit-const-commute} on the left with $\top$, and Lemma \ref{limit-Id-commute} on the right to distribute over the equality, using $\Ix_\simeq.A$ to finish up.
+
+Now consider $t_\simeq.A\;\phi\;(\pre{\eta}\;x)$, which witnesses the equivalence
+\begin{gather*}
+\begin{align*}
+\text{chain.t}\;(\lambda n.\lambda i.(E\;(S^n\;\bbO)).A&\;(\pre{\eta}\;x)\;(\phi'.p\;n\;i)\;.1)&\\(\lambda n.(E\;(S^{1+n}\;\bbO)).A&\;(\pre{\eta}\;x)\;(\phi'.p\;(1+n)\;i_0)\;.2)&
+\end{align*}\\
+\simeq\\
+L.A\;\phi\;(\pre{\eta}\;x)
+\end{gather*}
+Applying the defining equations of $E$ (see \ref{ex-successor-alg}), we see that
+\[(E\;(S^n\;\bbO)).A\;(\pre{\eta}\;x)\;(\phi'.p\;n\;i)\;.1\text{ reduces to } \Arg\eta\;(S^n\;\bbO)\;x\;(\phi'.p\;n\;i)\]
+and
+\begin{align*}
+(E\;(S^{1+n}\;\bbO)).A\;(\pre{\eta}\;x)\;(\phi'.p\;(1+n)\;i_0)\;.2&\text{ reduces to } (S^{1+n}\;O).\eta\;x\;(\phi'.p\;(1+n)\;i_0),\\
+\text{which by definition of $(S\;(S^n\;\bbO)).\eta$ further}&\text{ reduces to } (\delta^\pi\;(S^n\;\bbO)).\eta\;x\;(\phi'.p\;(1+n)\;i_0).
+\end{align*}
+These reductions imply that the right side of $\Arg_\simeq^+.\eta$ and the left side of $t_\simeq.A\;\phi\;(\pre{\eta}\;x)$ are the same type, and can thus be composed. Naming the composition, we have \[(L.\eta, L^n.\eta) : \Arg\eta\;L\;x\;\phi \simeq L.A\;\phi\;(\pre{\eta}\;x),\] which is exactly the data we need for a nice $\eta$ operation.
+\end{subsubsection}
+
+\begin{subsubsection}{Defining $L.\join$}
+The definitions of $L.\join$ and $L.\inj$ largely mirror that of $L.\eta$.
+Given $(a, b) : \pre{A} \times \pre{B}$ and $\phi : \Ix A\;L$, we let $\phi' = \Ix_\simeq.A\;\phi$ and define $\Arg_\simeq^+.\join\;(a,b)\;\phi$ witnessing that $\Arg\join$ commutes with chains, having type
+\begin{gather*}
+\Arg\join\;L\;(a,b)\;\phi\\
+\simeq\\
+\text{chain.t}\;(\lambda n.\lambda i.\Arg\join\;(S^n\;\bbO)\;(a,b)\;(\phi'.p\;n\;i))\;(\lambda n.(\delta^\pi\;(S^{n+1}\;\bbO)).\eta\;(a,b)\;(\phi'.p\;(1+n)\;i_0))
+\end{gather*}
+using the lemmas from \S\ref{ex-chain}. We then compose with $t_\simeq.A\;\phi\;(\pre{\join}\;a\;b)$, which is possible because of the same argument about computation in $E$ as from $\eta$, yielding \[(L.\join, L^n.\join) : \Arg\join\;L\;(a,b)\;\phi \simeq L.A\;\phi\;(\pre{join}\;a\;b).\]
+\end{subsubsection}
+
+\begin{subsubsection}{Defining $L.\inj$}
+The same as with $L.\join$, given $a : \pre{A}$ and $\phi : \Ix B\;L$, we let $\phi' = \Ix_\simeq.B\;\phi$ and define $\Arg_\simeq^+.\inj\;a\;\phi$ witnessing that $\Arg\inj$ commutes with chains, then compose this with $t_\simeq.B\;\phi\;(\pre{\inj}\;a)$ yielding \[(L.\inj, L^N.\inj) : \Arg\inj\;L\;a\;\phi \simeq L.B\;\phi\;(\pre{\inj}\;a).\]
+\end{subsubsection}
+}
+
+\begin{subsubsection}{Limit of Goodness Algebras}
+\begin{lemma}\label{example-a-goodness-to-nice-goodness}
+    A nice goodness algebra exists.
+\end{lemma}
+\begin{proof}
+    The sorts of the limit goodness algebra are defined as a chain, and operations act pointwise on each component of the chain. To prove that the operations are equivalences, we compose a proof that $\Arg$ commutes with chains (given by combining the lemmas about chains commuting with type formers) with a proof that for each sort, the chain given by the $(E\;(S^n\;\bbO))$ is equivalent to the chain given by $(S^n\;\bbO)$ (given by Lemma \ref{limit-sort-lemma}). Since $(E\;(S^n\;\bbO))$ is defined by pattern matching to reduce to $\Arg$, the right and left sides of these equivalences agree, and we find that the operations are indeed nice. See the formalization for details.
+\end{proof}
+
+\begin{theorem}\label{example-constructed-II}
+    There exists an inductive-inductive object $(A, B, \eta, \join, \inj)$ that satisfies the simple elimination rules as defined in Figure \ref{example-definition}.
+\end{theorem}
+\begin{proof}
+    A nice goodness algebra exists by Lemma \ref{example-a-goodness-to-nice-goodness}, therefore we can construct $(A, B, \eta, \join, \inj)$ satisfying the simple elimination rules by Lemma \ref{example-nice-gives-simple-elim}.
+\end{proof}
+
+We have therefore succeeded. In cubical type theory, the inductive-inductive definition from Figure \ref{example-definition} is constructible.
+
+\end{subsubsection}
+
+\end{subsection}
+
+\end{section}
+
+\erase{ % Move to appendix
+
+\begin{section}{Specifying inductive-inductive types}
+    
+\begin{subsection}{Inductive-inductive specifications}\label{IIspecs-definition}
+
+In section \S\ref{construct-cubical}, we give a construction of inductive-inductive types with simple elimination rules. But before doing so, we have to define what an inductive-inductive type is, and what the simple elimination rules are. The author has attempted to define internally a type of inductive-inductive specifications, but encountered difficulties related to increasingly complex coherence conditions similar to those encountered when defining semi-simplicial sets \citep{simplicialsets}; this is left as future work. \citet{KaposiKovacsHIITsyntax} give instead an external syntactic description of inductive-inductive specifications, along with a definition of the general elimination rules. We use a similar system, modified slightly to simplify our proofs.
+
+We write $\Gamma \tac x : A$ for the standard judgment that $x$ has type $A$ in context $\Gamma$, and write $\Gamma \tac \Delta$ to mean that $\Delta$ is an inductive-inductive specification in the context $\Gamma$. This judgment is defined in terms of several others; collecting the new judgments we use, we have:
+
+\begin{align*}
+&\Gamma \tac \Delta && \text{Relative to the context $\Gamma$, $\Delta$ is an inductive-inductive specification},\\
+&\Gamma ; \Delta \tac \Xi && \text{Relative to $\Gamma$ and $\Delta$, $\Xi$ is a well-formed data context. Requires $\Gamma \tac \Delta$.}\\
+&\Gamma ; \Delta ; \Xi \tac A : \UU && \text{Relative to $\Gamma$, $\Delta$, and $\Xi$, $A$ is an inductive data type. Requires $\Gamma ; \Delta \tac \Xi$.}\\
+&\Gamma ; \Delta ; \Xi \tac a : \underline{A} && \text{Relative to $\Gamma$, $\Delta$, and $\Xi$, $a$ is a value of type $A$. Requires $\Gamma ; \Delta ; \Xi \tac A : \UU$.}\\
+&B : T \in \Delta && \text{the binding $(B : T)$ occurs in the context $\Delta$.}
+\end{align*}
+The rules of our system are given in Figure \ref{spec-rules}. We use $A[x := \hat{x}]$ to denote the substitution of $\hat{x}$ for $x$ in $A$. We also assume $\beta$ and $\eta$ conversion rules for the dependent pair, unit type, and infinitary arguments. Weakening is implicit. The rule (sort-form) allows adding a sort to the inductive-inductive specification, given $X$ as the non-inductive indices and data type $A$ as the inductive indices. Sorts can be eliminated by providing values $\hat{x} : X$ and $\hat{a} : A[x := \hat{x}]$, with rule (sort-use). Operations are similar, but the return type is now a sort $B$ applied to non-inductive index $\hat{r}$ and inductive index $\hat{s}$. Operations are formed by (op-form) and eliminated by (op-use).
+
+\begin{figure}[htpb]
+    \begin{itemize}
+        \item Inductive specifications: \hfill \boxed{\Gamma \tac \Delta}
+        
+        \[\begin{bprooftree}
+            \AxiomC{$\Gamma , x : X ; \Delta ; \epsilon \tac A : U$}\UnaryInfC{$\Gamma \tac \Delta , T : \Pi(x:X).A\to U$}
+        \end{bprooftree}\text{(sort-form)}\]
+        
+        \[\begin{bprooftree}
+            \AxiomC{$T : \Pi(x : X).A \to U \in \Delta$}\AxiomC{$\Gamma \tac \hat{x} : X$}\AxiomC{$\Gamma ; \Delta ; \Xi \tac \hat{a} : \underline{A[x:=\hat{x}]}$}\TrinaryInfC{$\Gamma ; \Delta ; \Xi \tac T\;\hat{x}\;\hat{a} : \UU$}
+        \end{bprooftree}\text{(sort-use)}\]
+        
+        \[\begin{bprooftree}
+            \AxiomC{$B : \Pi(r : R).S\to U  \in \Delta$}\AxiomC{$\Gamma , x : X \tac \hat{r} : R$}\AxiomC{$\Gamma , x : X ; \Delta ; a : A \tac \hat{s} : \underline{S[r:=\hat{r}]}$}\TrinaryInfC{$\Gamma \tac \Delta , F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}$}
+        \end{bprooftree}\text{(op-form)}\]
+        
+        \[\begin{bprooftree}
+            \AxiomC{$F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$}\AxiomC{$\Gamma \tac \hat{x} : X$}\AxiomC{$\Gamma ; \Delta ; \Xi \tac \hat{a} : \underline{A[x:=\hat{x}]}$}\TrinaryInfC{$\Gamma ; \Delta ; \Xi \tac F\;\hat{x}\;\hat{a} : \underline{B\;\hat{r}[x := \hat{x}]\;\hat{s}[x := \hat{x}, a := \hat{a}]}$}
+        \end{bprooftree}\text{(op-use)}\]
+        
+        \[\begin{bprooftree}
+                \AxiomC{}\UnaryInfC{$\Gamma\tac \epsilon$}
+        \end{bprooftree}\]
+
+        \item Data contexts: \hfill \boxed{\Gamma ; \Delta \tac \Xi}
+        \[
+            \begin{bprooftree}
+                \AxiomC{}\UnaryInfC{$\Gamma ; \Delta \tac \epsilon$}
+            \end{bprooftree}
+            \qquad
+            \begin{bprooftree}
+                \AxiomC{$\Gamma ; \Delta ; \Xi \tac A : \UU$}\UnaryInfC{$\Gamma ; \Delta \tac \Xi , a : A$}
+            \end{bprooftree}
+            \qquad
+            \begin{bprooftree}
+                \AxiomC{$a : A \in \Xi$}\UnaryInfC{$\Gamma ; \Delta ; \Xi \tac a : \underline{A}$}
+            \end{bprooftree}
+        \]
+
+        \item Data types and values: \hfill \boxed{\Gamma; \Delta; \Xi \tac A : \UU} and \boxed{\Gamma; \Delta; \Xi \tac a : \underline{A}}
+        \begin{itemize}
+            \item Dependent sum:
+            \[
+                \begin{bprooftree}
+                    \AxiomC{$\Gamma ; \Delta ; \Xi \tac A : \UU$}\AxiomC{$\Gamma ; \Delta ; \Xi , a : A \tac B : \UU$}\BinaryInfC{$\Gamma ; \Delta ; \Xi \tac \Sigma(a : A).B : \UU$}
+                \end{bprooftree}
+                \begin{bprooftree}
+                    \AxiomC{$\Gamma ; \Delta ; \Xi \tac \hat{a} : \underline{A}$}\AxiomC{$\Gamma ; \Delta ; \Xi \tac \hat{b} : \underline{B[a := \hat{a}]}$}\BinaryInfC{$\Gamma ; \Delta ; \Xi \tac (\hat{a} , \hat{b}) : \underline{\Sigma(a : A).B}$}
+                \end{bprooftree}
+            \]
+            \[
+                \begin{bprooftree}
+                    \AxiomC{$\Gamma ; \Delta ; \Xi \tac p : \underline{\Sigma(a : A).B}$}\UnaryInfC{$\Gamma ; \Delta ; \Xi \tac p .1 : \underline{A}$}
+                \end{bprooftree}
+                \begin{bprooftree}
+                    \AxiomC{$\Gamma ; \Delta ; \Xi \tac p : \underline{\Sigma(a : A).B}$}\UnaryInfC{$\Gamma ; \Delta ; \Xi \tac p .2 : \underline{B[a := p .1]}$}
+                \end{bprooftree}
+            \]
+        
+            \item Unit type:
+            \[
+                \begin{bprooftree}
+                    \AxiomC{}\UnaryInfC{$\Gamma ; \Delta ; \Xi \tac \top : \UU$}
+                \end{bprooftree}
+                \begin{bprooftree}
+                    \AxiomC{}\UnaryInfC{$\Gamma ; \Delta ; \Xi \tac \star : \underline{\top}$}
+                \end{bprooftree}
+            \]
+        
+            \item Function type:
+            \[
+                \begin{bprooftree}
+                    \AxiomC{$\Gamma \tac X : \USet$}\AxiomC{$\Gamma , x : X ; \Delta ; \Xi \tac B : \UU$}\BinaryInfC{$\Gamma ; \Delta \; \Xi \tac \Pi(x : X).B : \UU$}
+                \end{bprooftree}
+                \begin{bprooftree}
+                    \AxiomC{$\Gamma , x : X ; \Delta ; \Xi \tac y : \underline{B}$}\UnaryInfC{$\Gamma ; \Delta ; \Xi \tac \lambda x.y : \underline{\Pi(x : X).B}$}
+                \end{bprooftree}
+            \]
+            \[
+                \begin{bprooftree}
+                    \AxiomC{$\Gamma ; \Delta ; \Xi \tac f : \underline{\Pi(x : X).B}$}\AxiomC{$\Gamma \tac \hat{x} : X$}\BinaryInfC{$\Gamma ; \Delta ; \Xi \tac f\; \hat{x} : \underline{B[x := \hat{x}]}$}
+                \end{bprooftree}
+            \]
+    
+        \end{itemize}
+   
+    \end{itemize}
+    
+    \caption{\label{spec-rules}Specification Type Theory rules}
+\end{figure}
+
+We mostly follow Kaposi and Kov\'acs, but make a several changes.
+\begin{itemize}
+    \item We require all our sorts and operations to be uncurried, restricting ourselves to the two forms $\Pi(x : X).A \to \UU$ for sorts and $\Pi(x : X)(a : A).B$ for operations. This simplifies the presentation of our construction, but is equally expressive, because we include the dependent pair and unit types which can be used to perform the uncurrying transformation.
+    \item We treat inductive arguments separately from operations, storing the inductive arguments in a third context $\Xi$. This follows from the previous point: the type $\N \to A \times A$ is not usually allowed as the type of a single constructor, but is allowed as a data type, due to the inclusion of the dependent pair type.
+    \item We add lambda abstractions, which can be used to construct values for infinitary arguments. We expect this was a simple oversight in the original paper; infinitary parameters are not particularly common in examples of inductive-inductive types, and adding lambda presents no particular new difficulties.
+    \item We do not include the equality type, which allowed Kaposi and Kovacs to handle higher inductive types, because higher inductive types are a strict extension of the theory we work in. \citep{hit_extension_kraus_2018}
+\end{itemize}
+
+\begin{figure}[htpb]\begin{flushleft}
+    The example given in Figure \ref{example-definition} can be coded (up to currying) by $X : \USet \tac \Delta$ where $\Delta$ is defined to be the context \begin{align*}& A : \Pi(\star : \top).\top \to \UU,\\& B : \Pi(\star : \top).A\;\star\;\star \to \UU,\\& \eta : \Pi(x : X)(\star : \top).A\;\star\;\star, \\&\join : \Pi(\star : \top)(p : \Sigma(a : A\;\star\;\star).B\;\star\;a).A\;\star\;\star,\\& \inj : \Pi(\star : \top)(a : A\;\star\;\star).B\;\star\;a.\end{align*}
+    Taking $\Delta^C$ gives the set of types for $(A, B, \eta, \join, \inj)$ at the beginning of Figure \ref{example-definition} (up to currying).
+    
+    \caption{\label{example-code}Inductive-inductive specification for the running example}
+\end{flushleft}\end{figure}
+
+The specifications come with an intended interpretation, which is denoted $-^C$ (Definition \ref{C-translation}).
+For the most part, this just consists of translating the specification syntax to the corresponding types and terms in standard type theory: dependent pairing of data types become the dependent pair type, pairing and projection of data values become standard pairing and projection, and so on.
+We translate a sort $T : \Pi(x : X).A \to \UU \in \Delta$ into the type of predicates \[(x : X) \to A^C\;\delta\;\emptytuple \to \USet,\] where $A^C\;\delta\;\emptytuple$ gives the interpretation of the type of inductive indices. Similarly, an operation $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$ becomes the type of constructors \[(x : X) \to (a : A^C\;\delta\;\emptytuple) \to \delta.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle),\] where $\hat{s}^C\;\delta\;\langle a\rangle$ is the interpretation of the inductive index $\hat{s}$, given the inductive arguments $a$. The term $\delta.B$ picks out the predicate corresponding to the sort $B$ from $\delta$, which is then applied to the interpreted non-inductive and inductive indices $\hat{r}$ and $\hat{s}^C\;\delta\;\langle a \rangle$ respectively. The interpretation of a specification $\Delta$ is then the type of tuples which contain interpretations for all the sorts and operations.
+
+\begin{definition}[\label{C-translation}$-^C$ translation: intended interpretation]
+We define $-^C$ such that:
+\begin{itemize}
+    \item If $\Gamma \tac \Delta$, then $\Delta^C : \USet_1$.
+    \item If $\Gamma ; \Delta \tac \Xi$, then $\Xi^C : (\delta : \Delta^C) \to \USet$.
+    \item If $\Gamma ; \Delta ; \Xi \tac A : \UU$, then $A^C : (\delta : \Delta^C) \to \Xi^C\;\delta \to \USet$.
+    \item If $\Gamma ; \Delta ; \Xi \tac x : \underline{A}$, then $x^C : (\delta : \Delta^C) \to (\xi : \Xi^C) \to A^C\;\delta\;\xi$.
+    \item If $B : T \in \Delta$, then we will write $\delta . B$ for the component corresponding to $B$ in $\delta$. %We define $\Delta^C$ as a type of dependent tuples with one component for each assumption in $\Delta$, so this makes sense.
+\end{itemize}
+The definition proceeds by recursion on the specification syntax:
+\begin{align*}
+\epsilon^C &= \top\\
+(\Delta , T : \Pi(x : X).A \to \UU)^C &= (\delta : \Delta^C)\times ((x : X) \to A^C\;\delta\;\emptytuple \to \USet),\\
+(\Delta , F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s})^C &= (\delta : \Delta^C) \times ((x : X) \to (a : A^C\;\delta\;\emptytuple) \to \delta.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle)),\\
+\epsilon^C\;\delta &= \top,\\
+(\Xi , a : A)^C\;\delta &= (\xi : \Xi^C\;\delta) \times A^C\;\delta\;\xi,\\
+(T\;\hat{x}\;\hat{a})^C\;\delta\;\xi &= \delta.T\;\hat{x}\;(\hat{a}^C\;\delta\;\xi),\\
+(F\;\hat{x}\;\hat{a})^C\;\delta\;\xi &= \delta.F\;\hat{x}\;(\hat{a}^C\;\delta\;\xi),\\
+(\Sigma(a : A).B)^C\;\delta\;\xi & = (a : A^C\;\delta\;\xi) \times B^C\;\delta\;(\xi , a),\\
+(\hat{a} , \hat{b})^C\;\delta\;\xi & = (\hat{a}^C\;\delta\;\xi ,\; \hat{b}^C\;\delta\;\xi),\\
+(p.1)^C\;\delta\;\xi &= (p^C\;\delta\;\xi).1,\\
+(p.2)^C\;\delta\;\xi &= (p^C\;\delta\;\xi).2,\\
+\top^C\;\delta\;\xi &= \top,\\
+\star^C\;\delta\;\xi &= \star,\\
+(\Pi(x : X).B)^C\;\delta\;\xi &= (x : X) \to B^C\;\delta\;\xi,\\
+(\lambda x.y)^C\;\delta\;\xi &= \lambda x. y^C\;\delta\;\xi,\\
+(f\;\hat{x})^C\;\delta\;\xi &= (f^C\;\delta\;\xi)\;\hat{x}.
+\end{align*}
+
+Since $\Delta^C$ is defined as the type of dependent tuples with one component for each assumption in $\Delta$, the notation $\delta.B$ makes sense to select the component corresponding to $B$.
+% For each $T : \Pi(x : X).A \to \UU \in \Delta$, we have \[\delta.T : (x : X) \to A^C\;\delta\;\emptytuple \to \USet,\] and for each $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$ with $B : \Pi(r : R).S \to \UU \in \Delta$, we have \[\delta.F : (x : X) \to (a : A^C\;\delta\;\emptytuple) \to \delta.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle).\]
+Because weakening is implicit, if $\Gamma ; \Delta ; \epsilon \tac A : \UU$, and $\Gamma ; \Delta ; \Xi \tac a : \underline{A}$, then $a^C\;\delta\;\xi$ has type $A^C\;\delta\;\xi$ which is the same as $A^C\;\delta\;\emptytuple$. Therefore, the rules for $(T\;\hat{x}\;\hat{a})^C$ and $(F\;\hat{x}\;\hat{a})^C$ are well typed. % This was wrong: When trying to define inductive-inductive specifications internally, this issue causes problems related to coherence whose resolution is an open problem.
+
+The running example is given as an inductive-inductive specification in Figure \ref{example-code}.
+
+\end{definition}
+
+\end{subsection}
+\begin{subsection}{\label{simple-elim-section}Defining the simple elimination rules}
+    
+In \S3.2.5 of \citet{nordvallforsberg2013thesis}, there are two flavors of elimination rules given, simple and general. In \citet{KaposiKovacsHIITsyntax}, the general elimination rules are defined; here we will define simple elimination rules.
+
+The \emph{motives} $-^{M_1}$ (Def. \ref{M1-translation}) consist of predicates on the sorts, while the \emph{methods} $-^{M_2}$ (Def. \ref{M2-translation}) show that the motives are preserved by the constructors. Similarly, \emph{eliminators} $-^{E_1}$ (Def. \ref{E1-translation}) show that the predicate holds for all elements, while the \emph{equations} $-^{E_2}$ (Def. \ref{E2-translation}) show that the elimination rules are equal to the cases given by the methods. These definitions are summarized in Figure \ref{simple-elim-translation}. An index of the many translations from the specification syntax given in this paper is in Figure \ref{translation-index}.
+
+\begin{definition}[\label{M1-translation}$-^{M_1}$ translation: simple elimination motives]
+Given an inductive-inductive specification $\Delta$ and an object $\delta : \Delta^C$, we define the type of motives $\Delta^{M_1}\;\delta$ to be tuples of predicates \[\delta^{M_1}.T\;x\;a : \delta.T\;x\;a \to \USet\] for all sorts $T : \Pi(x : X).A \to \UU \in \Delta$.
+\end{definition}
+
+Comparing this to the example in Figure \ref{example-definition}, the sort specification $A : \Pi(\star : \top).\top \to \UU$, for which we have type $\delta.A : \top \to \top \to \USet$, gets mapped to the type of predicates $\delta^{M_1}.A : \top \to \top \to \delta.A\;\star\;\star \to \USet$, or dropping $\top$ arguments to $PA : A \to \USet$. Likewise, the sort specification $B : \Pi(\star : \top).A\;\star\;\star \to \UU$, for which we have type $\delta.B : \top \to \delta.A\;\star\;\star \to \USet$ gets mapped to the type of predicates $\delta^{M_1}.B : \top \to (a : \delta.A\;\star\;\star) \to \delta.B\;\star\;a \to \USet$, and dropping $\top$ arguments gives $PB : (a : A) \to B\;a \to \USet$. The motives of the simple elimination rules are thus pairs of \[PA : A \to \USet\qquad\text{ and }\qquad PB : (a : A) \to B\;a \to \USet.\]
+
+\begin{definition}[\label{M2-translation}$-^{M_2}$ translation: simple elimination methods]
+Given $\delta^{M_1} : \Delta^{M_1}\;\delta$, we can define the inductive hypotheses for inductive arguments: for all $\Gamma ; \Delta ; \Xi \tac A : \UU$, given $\xi : \Xi^C\;\delta$ and $a : A^C\;\delta\;\xi$, we define the type $A^{M_2}\;\xi\;a$ by
+\begin{align*}
+(T\;\hat{x}\;\hat{a})^{M_2}\;\xi\;t &= \delta^{M_1}.T\;\hat{x}\;(\hat{a}^{C}\;\delta\;\xi)\;t,\\
+(\Sigma(a : A).B)^{M_2}\;\xi\;(\hat{a},\hat{b}) &= A^{M_2}\;\xi\;\hat{a} \times B^{M_2}\;(\xi,\hat{a})\;\hat{b},\\
+\top^{M_2}\;\xi\;\star &= \top,\\
+(\Pi(x : X).B)^{M_2}\;\xi\;f &= (x : X) \to B^{M_2}\;\xi\;(f\;x).
+\end{align*}
+This says that the inductive hypothesis for an inductive argument of type $(T\;\hat{x}\;\hat{a})$ is given by the predicate $\delta^{M_1}.T$, and the inductive hypothesis for multiple arguments is given component-wise.
+
+We then let the type of motives $\Delta^{M_2}\;\delta\;\delta^{M_1}$ be given by tuples of induction steps \[\delta^{M_2}.F\;x\;a : A^{M_2}\;\emptytuple\;a\to \delta^{M_1}.B\; \hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle)\;(\delta.F\;x\;a)\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$, showing that for all operations, if the induction hypothesis $A^{M_2}$ holds for the arguments $a$, then the predicate $\delta^{M_1}.B$ holds for the constructor $\delta.F\;x\;a$.
+\end{definition}
+
+Going back to the example in Figure \ref{example-definition} again, the specification of the $\join$ operation is \[\join : \Pi(\star : \top)(p : \Sigma(a : A\;\star\;\star).B\;\star\;a).A\;\star\;\star.\]
+The actual operation is a function \[\delta.\join : \top \to ((a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a) \to \delta.A\;\star\;\star\] (or $\join : (a : A) \to B\;a \to A$ if curried).
+Given motives $\delta^{M_1}.A$ and $\delta^{M_2}.B$, the induction hypothesis for a pair $p : (a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{M_2}\;\star\;p$, which by the definition of $-^{M_2}$ is \[\delta^{M_1}.A\;\star\;\star\;(p.1) \times \delta^{M_1}.B\;\star\;(p.1)\;(p.2).\] The method then, is \begin{align*}\delta^{M_2}.\join :&\; \top \to (p : (a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a) \to\\&\; (\delta^{M_1}.A\;\star\;\star\;(p.1) \times \delta^{M_1}.B\;\star\;(p.1)\;(p.2)) \to \delta^{M_1}.A\;\star\;\star\;\delta.\join\;\star\;p.\end{align*} If we do a bit of currying and rearranging, this becomes \[P\join : (a : A) \to PA\;a \to (b : B\;a) \to PB\;a\;b \to PA\;(\join\;a\;b).\] Moving $a$ and $b$ to the left side (the pair $(a, b)$ is the $a$ in $\delta^{M_2}.F\;x\;a$ above), we have \[P\join\;(a, b) : (PA\;a \times PB\;a\;b) \to PA\;(\join\;a\;b),\] which can be read as ``if the motives hold for the arguments then the motives hold for the conclusion.''
+
+Now, if we provide motives (saying what we want to eliminate into), and methods (saying how to do it), then we want to define some functions by induction.
+
+\begin{definition}[\label{E1-translation}$-^{E_1}$ translation: simple eliminators]
+We let the type $\Delta^{E_1}\;\delta\;\delta^{M_1}$ of the elimination rules be the type of tuples of functions \[\delta^{E_1} \;x\;a : (t : \delta.T\;x\;a) \to \delta^{M_1}.T\;x\;a\;t \] for all sorts $T : \Pi(x : X).A\to\UU \in\Delta$, witnessing that the predicate $\delta^{M_1}.T$ holds for all $t$.
+\end{definition}
+
+In Figure \ref{example-definition}, these are $EA : (a : A) \to PA\;a$ and $EB\;a : (b : B\;a) \to PB\;a\;b$.
+
+\begin{definition}[\label{E2-translation}$-^{E_2}$ translation: simple equations]
+Given $\delta^{E_1} : \Delta^{E_1}\;\delta\;\delta^{M_1}$, we can show that the induction hypothesis is always satisfied. Given $\Gamma ; \Delta ; \Xi \tac A : \UU$, $\xi : \Xi^C\;\delta$, and $a : A^C\;\delta\;\xi$, we define $A^{E_2}\;\xi\;a : A^{M_2}\;\xi\;a$ by
+\begin{align*}
+(T\;\hat{x}\;\hat{a})^{E_2}\;\xi\;t &= \delta^{E_1}.T\;\hat{x}\;(\hat{a}^C\;\delta\;\xi)\;t,\\
+(\Sigma(a : A).B)^{E_2}\;\xi\;(\hat{a},\hat{b}) &= (A^{E_2}\;\xi\;\hat{a} ,\; B^{E_2}\;(\xi , A^{E_2}\;\xi\;a)\;\hat{b}),\\
+\top^{E_2}\;\xi\;\star &= \star,\\
+(\Pi(x : X).B)^{E_2}\;\xi\;f &= \lambda x.\; B^{E_2}\;\xi\;(f\;x).
+\end{align*}
+In short, we use the eliminator component-wise.
+
+Then, given $\delta^{M_2} : \Delta^{M_2}\;\delta\;\delta^{M_1}$, we define the type $\Delta^{E_2}\;\delta\;\delta^{M_1}\;\delta^{M_2}\;\delta^{E_1}$ of the (propositional) equations to be tuples of equalities \[\delta^{E_2}.F\;x\;a : \Id{\delta^{E_1}.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle)\;(\delta.F\;x\;a)}{\delta^{M_2}.F\;x\;a\;(A^{E_2}\;\emptytuple\;a)}\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in\Delta$ expressing that the eliminator $\delta^{E_1}.B$ applied to the constructor $\delta.F\;x\;a$ is equal to using the provided induction step $\delta^{M_2}.F$ with the induction hypothesis $A^{E_2}\;\emptytuple\;a$ given by the eliminator.
+\end{definition}
+
+For join, this definition comes out to the type \[E\join\;(a, b) : \IdA{EA\;(\join\;a\;b)}{P\join\;(a,b)\;(EA\;a, EB\;a\;b)}{PA\;(\join\;a\;b)}.\] The sub-term $(EA\;a, EB\;a\;b)$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{E_2}\;\emptytuple\;(a, b)$, witnessing that the induction hypothesis $(PA\;a \times PB\;a\;b)$ for $P\join$ is satisfied. For $\inj$, we have \[E\inj\;a : \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.\]
+
+This concludes the definition of the simple elimination rules we will use. Going back to our running example, applying the $-^M$, and $-^E$ translations to the specification in Figure \ref{example-code} gives the second and third sets of types in Figure \ref{example-definition}.
+
+Our goal is now, for each inductive specification $\Delta$, to give a term $\delta : \Delta^C$ and a function of type \[(\delta^{M_1} : \Delta^{M_1}\;\delta) \to (\delta^{M_2} : \Delta^{M_2}\;\delta\;\delta^{M_1}) \to (\delta^{E_1} : \Delta^{E_1}\;\delta\;\delta^{M_1}) \times \Delta^{E_2}\;\delta\;\delta^{M_1}\;\delta^{M_2}\;\delta^{E_1}\] showing that we can construct eliminators which satisfy the equations for any given motives and methods.
+
+\begin{figure}[htpb]
+    \begin{flushleft}
+        The sorts, motives, and elimination rules:
+        \begin{align*}
+        \delta.T\;x\;a &: \USet,\\
+        \delta^{M_1}.T\;x\;a &: \delta.T\;x\;a \to \USet,\\
+        \delta^{E_1}.T\;x\;a &: (t : \delta.T\;x\;a) \to \delta^{M_1}.T\;x\;a
+        \end{align*}
+        for all sorts $T : \Pi(x : X).A\to\UU \in\Delta$.
+        
+        The inductive arguments and operations,
+        \[(T\;\hat{x}\;\hat{a})^C\;\delta\;\xi = \delta.T\;\hat{x}\;(\hat{a}^C\;\delta\;\xi),
+        \qquad\delta.F : (x : X) \to (a : A^C\;\delta\;\emptytuple) \to \delta.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a\rangle),\]
+        inductive hypotheses and induction steps,
+        \[(T\;\hat{x}\;\hat{a})^{M_2}\;\xi\;t = \delta^{M_1}.T\;\hat{x}\;(\hat{a}^C\;\delta\;\xi)\;t,
+        \qquad\delta^{M_2}.F\;x\;a : A^{M_2}\;\emptytuple\;a \to \delta^{M_1}.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle)\;(\delta.F\;x\;a),\]
+        and witnesses for the inductive hypotheses and equations,
+        \[(T\;\hat{x}\;\hat{a})^{E_2}\;\xi\;t = \delta^{E_1}.T\;\hat{x}\;(\hat{a}^C\;\delta\;\xi)\;t,\]
+        \[\delta^{E_2}.F\;x\;a : \Id{\delta^{E_1}.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle)\;(\delta.F\;x\;a)}{\delta^{M_2}.F\;x\;a\;(A^{E_2}\;\emptytuple\;a)},\]
+        are given for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$.
+        
+        The simple elimination rules for an object $\delta$ express the principle that given both motives and methods, we have eliminators that satisfy the equations.
+    \end{flushleft}
+    
+    \caption{\label{simple-elim-translation}The simple eliminators, summarized}
+\end{figure}
+
+\end{subsection}
+
+\end{section}
+
+\begin{section}{Constructing all Inductive-Inductive types in Cubical Type Theory}\label{construct-cubical}
+
+In this section, we construct the inductive-inductive types specified in \S\ref{IIspecs-definition}, carried out in cubical type theory, satisfying the same simple elimination rules handled by \Forsberg/.
+
+Assume an inductive-inductive specification $\Delta$ throughout. Our construction will proceed in several steps, parallel to the development in \S\ref{example-construct-cubical}:
+\begin{itemize}
+    \item In \S\ref{pre-syntax}, we approximate by dropping the indices, leaving a standard mutual inductive definition (\emph{pre-syntax}).
+    \item In \S\ref{goodness-algebra}, we define \emph{goodness algebras}, collections of predicates over the pre-syntax which define the index relationship (analogously to $\good{A}$ and $\good{B}$ from \S\ref{derivingUIP}).
+    \item In \S\ref{niceness}, we define a predicate \emph{nice} on goodness algebras, such that if we have a nice goodness algebra, then we can construct the simple elimination rules.
+    \item In \S\ref{successor-alg}, we use pattern matching over the pre-syntax to define a function $S$ from goodness algebras to goodness algebras.
+    \item In \S\ref{chain}, we introduce some useful lemmas about the limit of a chain of sets.
+    \item In \S\ref{limit-alg}, for a given goodness algebra $\bbO$, we define the limit of the sequence \[\bbO, S\;\bbO, S\;(S\;\bbO), \dots, S^n\;\bbO,\dots\] and show that it is nice.
+    \item In \S\ref{final-alg}, we show that a goodness algebra $\bbO$ exists.
+\end{itemize}
+Combining \S\ref{limit-alg} with \S\ref{final-alg}, we can construct a nice goodness algebra, and so can construct the simple elimination rules by \S\ref{niceness}.
+
+\begin{subsection}{pre-syntax}\label{pre-syntax}
+The pre-syntax is obtained by removing the inductive indices from $\Delta^C$, leaving a standard mutual indexed inductive definition.
+Figure \ref{pre-syntax-translation} summarizes the translation. Superscripts beginning with a $P$ refer to the pre-syntax.
+
+We have sorts $\Delta^{PC_1}$ which is the type of tuples of \[\delta^{PC_1}.T : X \to \USet\] for all sorts $T : \Pi(x : X).A\to\UU \in\Delta$. Note that we completely drop the inductive index $A$ from the sorts. In our running example from Figure \ref{example-definition}, where we had $\delta.B : \top \to \delta.A\;\star\;\star \to \USet$, we interpret the pre-syntax for $B$ as just $\delta^{PC_1}.B : \top \to \USet$, or $\pre{B} : \USet$ if we drop $\top$ arguments. The rest of the pre-syntax translation is just propagating this change; removing the inductive indices leaves a normal mutual inductive definition. In particular, we can expect the equations to hold up to definitional equality.
+
+We define the stripped inductive arguments $A^{PC_2}$ by taking
+\begin{align*}
+(T\;\hat{x}\;\hat{a})^{PC_2} &= \delta^{PC_1}.T\;\hat{x},\\
+(\Sigma(a : A).B)^{PC_2} &= A^{PC_2}\times B^{PC_2},\\
+\top^{PC_2} &= \top,\\
+(\Pi(x : X).B)^{PC_2} &= (x : X) \to B^{PC_2}.
+\end{align*} Notice that we drop $\hat{a}$ from the definition of $(T\;\hat{x}\;\hat{a})^{PC_2}$.
+The operations $\Delta^{PC_2}\;\delta^{PC_1}$ are given by \[\delta^{PC_2}.F : (x : X) \to A^{PC_2} \to \delta^{PC_1}.B\;\hat{r}\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$. Together, the sorts and operations specify an inductive type; we will fix $\delta^{PC_1}$ and $\delta^{PC_2}$ as the concrete sorts and operations of this type.
+
+The motives are given by predicates $\delta^{PM_1} : \Delta^{PM_1}$ \[\delta^{PM_1}.T\;x : \delta^{PC_1}.T\;x\to \USet\] for all sorts $T : \Pi(x : X).A\to\UU \in\Delta$. The induction hypothesis $A^{PM_2}\;a$ for $a : A^{PC_2}$ is given by taking \[(T\;\hat{x}\;\hat{a})^{PM_2}\;t = \delta^{PM_1}.T\;\hat{x}\;t\] and extended component-wise as in Def. \ref{M2-translation}. The methods $\Delta^{PM_2}\;\delta^{PM_1}$ are then given by induction steps \[\delta^{PM_2}.F\;x\;a : A^{PM_2}\;a \to \delta^{PM_1}.B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$.
+
+The eliminators $\delta^{PE_1} : \Delta^{PE_1}\;\delta^{PM_1}$ have types \[\delta^{PE_1}.T\;x : (a : \delta^{PC_1}.T\;x) \to \delta^{PM_1}.T\;x\;a\] for all sorts $T : \Pi(x : X).A\to\UU \in\Delta$, showing that the motives always hold. Given the eliminators $\delta^{PE_1}$, we can show that the induction hypothesis is always inhabited by $A^{PE_2}\;a : A^{PM_2}\;a$ defined component-wise by \begin{align*}(T\;\hat{x}\;\hat{a})^{PE_2}\;t &= \delta^{PE_1}.T\;\hat{x}\;t.\end{align*} We then know the equations $\Delta^{PE_2}\;\delta^{PM_1}\;\delta^{PM_2}\;\delta^{PE_1}$ that \[\delta^{PE_1}.B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\quad\text{reduces to}\quad \delta^{PM_2}.F\;x\;a\;(A^{PE_2}\;a)\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$, $x : X$, and $a : A^{PC_2}$, or that the eliminators ($\delta^{PE_1}.B$) compute on constructors ($\delta^{PC_2}.F$) to the provided induction steps ($\delta^{PM_2}.F$) using the eliminators to fill the induction hypothesis ($A^{PE_2}\;a : A^{PM_2}\;a$).
+
+\begin{figure}[htpb]
+    \begin{flushleft}
+    The sorts, motives, and elimination rules:
+    \begin{align*}
+    \delta^{PC_1}.T\;x &: \USet,\\
+    \delta^{PM_1}.T\;x &: \delta^{PC_1}.T\;x \to \USet,\\
+    \delta^{PE_1}.T\;x &: (t : \delta^{PC_1}.T\;x) \to \delta^{PM_1}.T\;x
+    \end{align*}
+    for all sorts $T : \Pi(x : X).A\to\UU \in\Delta$.
+    
+    The inductive arguments and operations, inductive hypotheses and induction steps:
+    \begin{align*}
+    (T\;\hat{x}\;\hat{a})^{PC_2} &= \delta^{PC_1}.T\;\hat{x},
+    &\delta^{PC_2}.F\;x &: A^{PC_2} \to \delta^{PC_1}.B\;\hat{r},\\
+    (T\;\hat{x}\;\hat{a})^{PM_2}\;t &= \delta^{PM_1}.T\;\hat{x}\;t,
+    &\delta^{PM_2}.F\;x\;a &: A^{PM_2}\;a \to \delta^{PM_1}.B\;\hat{r}\;(\delta^{PC_1}.F\;x\;a),
+    \end{align*}
+    for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$.
+    
+    Given the eliminators, we can inhabit the induction hypothesis by $A^{PE_2}\;a : A^{PM_2}\;a$ defined by
+    \begin{align*}
+    (T\;\hat{x}\;\hat{a})^{PE_2}\;t &= \delta^{PE_1}.T\;\hat{x}\;t.
+    \end{align*}
+    The equations are:
+    \[\delta^{PE_1}.B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\quad\text{reduces to}\quad \delta^{PM_2}.F\;x\;a\;(A^{PE_2}\;a)\]
+    for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$.
+    
+    The sorts and operations form an inductive definition, so we have an induction principle that given motives and methods, we have eliminators such that the equations hold.
+    \end{flushleft}
+    
+    \caption{\label{pre-syntax-translation}The pre-syntax translation, summarized}
+\end{figure}
+
+Compare this to the case of our running example, the pre-syntax for which was given in \S\ref{ex-pre-syntax}. Our translation gives \[\pre{P\join} : (p : \pre{A} \times \pre{B}) \to (\pre{PA}\;(p.1)\times \pre{PB}\;(p.2)) \to \pre{PA}\;(\pre{\join}\;p)\] instead of \[\pre{P\join} : (a : \pre{A}) \to (b : \pre{B}) \to (\pre{PA}\;a \times \pre{PB}\;b) \to \pre{PA}\;(\pre{\join}\;a\;b),\] but these are equivalent up to currying.
+
+\end{subsection}
+\begin{subsection}{goodness algebras}\label{goodness-algebra}
+
+The pre-syntax defined above is too lenient, because the inductive indices are being ignored. We give a type of structures $\Delta^G$ (goodness algebras) consisting of predicates on the pre-terms and inductive indices, in the same way as in \S\ref{ex-goodness-algebra}. The intention is that these goodness predicates identify which pre-terms have which inductive indices. In \S\ref{niceness}, we identify conditions on a goodness algebra such that it accurately picks out well-formed pre-terms.
+
+\begin{definition}[\label{G-translation}$-^G$ translation: goodness algebra]
+We define the type of goodness algebras $\Delta^G$ simultaneously with a function $\Delta^{\Sigma} : \Delta^G \to \Delta^C$ which combines the pre-syntax from \S\ref{pre-syntax} with a goodness algebra to form an inductive-inductive object. For $\Gamma ; \Delta ; \Xi \tac A : \UU$, with $\delta^G : \Delta^G$ and $\xi : \Xi^C\;(\Delta^\Sigma\;\delta^G)$, we also need to define
+\begin{align*}
+A^G\;\delta^G\;\xi &: A^{PC_2} \to \USet,\\
+A^\Sigma\;\delta^G\;\xi &: (a : A^{PC_2}) \times A^G\;\delta^G\;\xi\;a \to A^C\;(\Delta^\Sigma\;\delta^G)\;\xi,\\
+A^{\Pi}\;\delta^G\;\xi &:A^C\;(\Delta^\Sigma\;\delta^G)\;\xi \to (a : A^{PC_2}) \times A^G\;\delta^G\;\xi\;a,\\
+&\text{such that $A^\Sigma\;\delta^G\;\xi$ and $A^{\Pi}\;\delta^G\;\xi$ are inverses up to definitional equality}
+\end{align*}
+Where $A^G$ gives the ``missing information'' you need to add to the pre-syntax inductive arguments $A^{PC_2}$ to be equivalent to the interpretation $A^C\;(\Delta^\Sigma\;\delta^G)\;\xi$ of $A$ in the inductive-inductive object $\Delta^\Sigma\;\delta^G$, as witnessed by $A^\Sigma$ and $A^\Pi$.
+
+First, let \[\Ix T\;\delta^G\;x = A^C\;(\Delta^{\Sigma}\;\delta^G)\;\emptytuple\] when $T : \Pi(x : X).A \to \UU \in \Delta$, $\delta^G : \Delta^G$, and $x : X$. This is the interpretation of the inductive index $A$ in the inductive-inductive object $\Delta^\Sigma\;\delta^G$, given the non-inductive index $x$ (which is in context for $A$).
+Also let \[\Arg F\;\delta^G\;x\;a\;\phi = (a^G : A^G\;\delta^G\;\emptytuple\;a)\times\IdA{\hat{s}^C\;(\Delta^{\Sigma}\;\delta^G)\;\langle A^{\Sigma}\;\delta^G\;\emptytuple\;(a,a^G)\rangle}{\phi}{\Ix B\;\delta^G\;\hat{r}}\] when $F : \Pi(x : X)(a:A).B\;\hat{r}\;\hat{s} \in \Delta$, with $B : \Pi(r : R).S\to\UU\in\Delta$ and $\delta^G : \Delta^G$, $x : X$, $a : A^{PC_2}$, and $\phi : \Ix B\;\delta^G\;\hat{r}$. The first component of $\Arg F$ contains the ``missing information'' $A^G$ to complete $a$. The second component witnesses that the provided index $\phi$ is equal to the expected index derived from interpreting $\hat{s}$ in $\Delta^\Sigma\;\delta^G$ when the $a$ in $\Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}$ is given by completing the provided pre-syntax $a$ with $a^G$. The underlying idea is that $\Arg F\;\delta^G\;x\;a\;\phi$ is all the information that is missing in the pre-syntax: $a^G$ has any information missing in the arguments, and the equality asserts the actual and expected indices line up.
+
+We define the type of goodness algebras $\Delta^G$ to be tuples of \[\delta^G.T\;x : \Ix T\;\delta^G\;x \to \delta^{PC_1}.T\;x \to \USet\] for all sorts $T : \Pi(x : X).A \to \UU \in \Delta$, where $\delta^G.T\;x\;\phi\;a$ can be read as pre-syntax $a$ has index $\phi$, and
+\[\delta^G.F\;x\;a\;\phi : \Arg F\;x\;a\;\phi \to \delta^G.B\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a)\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$, which witnesses that $\Arg F\;x\;a\;\phi$ is enough to show that the constructor form $\delta^{PC_2}.F\;x\;a$ has index $\phi$.
+
+Given $\delta^G : \Delta^G$, we can define $\Delta^\Sigma\;\delta^G : \Delta^C$ by taking \begin{align*}(\Delta^\Sigma\;\delta^G).T\;x\;\phi =&\; (t : \delta^{PC_1}.T)\times \delta^G.T\;x\;\phi\;t,\\
+(\Delta^\Sigma\;\delta^G).F\;x\;a =&\; \text{let $(a_1,a_2)$ := $A^{\Pi}\;\delta^G\;\emptytuple\;a$ in}\\&\;(\delta^{PC_2}.F\;x\;a_1, \delta^G.F\;x\;a_1\;(s^C\;(\Delta^\Sigma\;\delta^G)\;\langle a\rangle)\;(a_2,\refl)).\end{align*}
+This sets the sorts to be pairs of pre-syntax and the corresponding goodness predicate $\delta^G.T$ witnessing that the index is correct, while the operations use $\delta^G.F$ and fill in the expected index, so that reflexivity proves the second component of $\Arg F$.
+
+Finally, we can define $A^G$ component-wise by setting \[(T\;\hat{x}\;\hat{a})^G\;\xi\;t = \delta^G.T\;\hat{x}\;(\hat{a}^C\;\delta\;\xi)\;t\] for $T : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}$, just applying the goodness predicate $\delta^G.T$ to $t$. In the base case $A^\Sigma$ and $A^\Pi$ are the identity, and extended to multiple arguments by rearranging pairs.
+
+\end{definition}
+
+Next we investigate various properties and operations on goodness algebras.
+
+\end{subsection}
+\begin{subsection}{niceness}\label{niceness}
+
+We generalize the definition of niceness in \S\ref{ex-niceness} to arbitrary inductive-inductive types.
+We want to identify a predicate $\Delta^N : \Delta^G \to \USet$ on goodness algebras which we will call niceness, such that given a nice goodness algebra $\delta^G$ (with proof of niceness $\delta^N : \Delta^N\;\delta^G)$, then letting $\delta = \Delta^\Sigma\;\delta^G$, the simple elimination rules (for all motives and methods we have eliminators that satisfy the equations)
+\[(\delta^{M_1} : \Delta^{M_1}\;\delta) \to (\delta^{M_2} : \Delta^{M_2}\;\delta\;\delta^{M_1}) \to (\delta^{E_1} : \Delta^{E_1}\;\delta\;\delta^{M_1}) \times \Delta^{E_2}\;\delta\;\delta^{M_1}\;\delta^{M_2}\;\delta^{E_1}\] is provable.
+
+Niceness is defined as
+\begin{definition}[\label{N-translation}$-^N$ translation: niceness]
+Given $\delta^G : \Delta^G$, we say that $\delta^G$ is nice ($\delta^N : \Delta^N\;\delta^G$) when we have \[\delta^N.F\;x\;a\;\phi : \isEquiv\; (\Arg F\;\delta^G\;x\;a\;\phi)\;(\delta^G.B\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a))\;(\delta^G.F\;x\;a\;\phi)\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}\in\Delta$ witnessing that all the goodness operations $\delta^G.F\;x\;a\;\phi$ are not just functions but equivalences between $\Arg F$ and the goodness predicate $\delta^G.B$ applied to the pre-syntax constructor $\delta^{PC_2}.F\;x\;a$.
+\end{definition}
+
+\begin{lemma}[\label{nice-to-elim}Nice goodness algebras give simple elimination rules]
+Given a goodness algebra $\delta^G : \Delta^G$, which is nice ($\delta^N : \Delta^N\;\delta^G$), the simple elimination rules are provable for the inductive-inductive object $\delta = \Delta^\Sigma\;\delta^G$.
+\end{lemma}
+\begin{proof}
+Assume motives $\delta^{M_1} : \Delta^{M_1}\;\delta$ (Def. \ref{M1-translation}) and methods $\delta^{M_2} : \Delta^{M_2}\;\delta\;\delta^{M_1}$ (Def. \ref{M2-translation}) for the simple elimination rules. We want to prove the simple elimination rules by induction over the pre-syntax, so we have to provide motives $\Delta^{m_1} : \Delta^{PM_1}$ and methods $\Delta^{m_2} : \Delta^{PM_2}\;\Delta^{m_1}$ (see \ref{pre-syntax}).
+We let \[\Delta^{m_1}.T\;x\;t = (\phi : \Ix T \;\delta^G\;x) \to (t^G : \delta^G.T\;x\;\phi\;t) \to \delta^{M_1}.T\;x\;\phi\;(t , t^G)\] for all sorts $T : \Pi(x : X).A \to \UU\in\Delta$. That is, our induction motive is that, for each term $t$ of the pre-syntax, we want to prove that for all inductive indices $\phi$, if $t^G$ witnesses that $t$ has index $\phi$, then the property $\delta^{M_1}.T$ holds for $(t, t^G)$. Note that, if we uncurry $t$ and $t^G$, the elimination rules will have type \[(x : X) \to (\phi: \Ix T\;\delta^G\;x) \to (t : \delta.T\;x\;\phi) \to \delta^{M_1}.T\;x\;\phi\;t,\] which is exactly what we need for the simple elimination rules.
+
+For the methods, we need to prove that the induction motive above is preserved by the operations of the pre-syntax, that is, prove that \begin{align*}&\; (x : X)\to (a : A^{PC_2}) \to A^{PM_2}\;a \to \\&\; (\phi : \Ix B \;\delta^G\;\hat{r}) \to (t^G : \delta^G.B\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a)) \to \delta^{M_1}.B\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a , t^G),\end{align*} where $A^{M_2}\;a$ is the inductive hypothesis stating that the motive holds for all the inductive arguments in $a$. We take $\Delta^{m_2} : \Delta^{PM_2}\;\Delta^{m_1}$ to be the tuple of the witnesses $\Delta^{m_2}.F$ given by applying Lemma \ref{equiv-pullback} with $\delta^N.F\;x\;a\;\phi$, then applying $J$, and then using the provided inductive step $\delta^{M_2}.F\;x$ to finish for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}\in\Delta$.
+
+Now applying the pre-syntax eliminator, we get $E : \Delta^{PE_1}\;\Delta^{m_1}$ such that $\Delta^{PE_2}\;\Delta^{m_1}\;\Delta^{m_2}\;E$ holds. We want $\delta^{E_1} : \Delta^{E_1}\;\delta\;\delta^{M_1}$ and $\delta^{E_2} : \Delta^{E_2}\;\delta\;\delta^{M_1}\;\delta^{M_2}\;\delta^{E_1}$.
+We let $\delta^{E_1}$ be given by \[\delta^{E_1}.T\;x\;\phi\;(t,t^G) = E\;x\;t\;\phi\;t^G\] for all sorts $T : \Pi(x : X).A\to\UU\in\Delta$, just rearranging the arguments. And the equations follow because we use $J$ with reflexivity and then pullback over an equivalence when we were already at a value of the function, so the inductive step is unchanged.
+
+Therefore, if we have a nice goodness algebra, then we can construct an inductive-inductive object that satisfies the simple eliminators.
+\end{proof}
+
+\end{subsection}
+\begin{subsection}{successor goodness algebra}\label{successor-alg}
+
+Our approach to creating a nice goodness algebra is to take successive approximations, and that means that we need a step function. Assume we have a goodness algebra $\delta^G : \Delta^G$. We want to create another goodness algebra $S\;\delta^G$, which is hopefully closer in some sense to being nice. We do this by pattern matching on the pre-syntax to unroll one level of the recurrence equations niceness encodes.
+
+We take as motives \[\lambda x.\lambda t.(\phi : \Ix T \;\delta^G\;x) \to (Y : \USet)\times (Y \to \delta^G.T\;x\;\phi\;t)\] for all sorts $T : \Pi(x : X).A \to \UU \in\Delta$. This gives a new predicate $Y$ for the sort $T$, along with a projection function from $Y$ back to the original goodness algebra, for each inductive index $\phi$ in the old goodness algebra $\delta^G$.
+For our methods, we take \[\lambda x.\lambda a.\lambda H.\lambda \phi. (\Arg F\;\delta^G\;x\;a\;\phi , \delta^G.F\;x\;a\;\phi)\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}\in\Delta$. 
+%So the new goodness predicate is given by $\Arg$ as interpreted in the old goodness algebra, and we use the operation $\delta^G.F$ to turn that back into the original goodness algebra.
+
+Having given motives and methods, induction over the pre-syntax yields eliminators $E\;\delta^G$ with \[(E\;\delta^G).T\;x\;t\;\phi\;.1 : \USet,\qquad (E\;\delta^G).T\;x\;t\;\phi\;.2 : (E\;\delta^G).T\;x\;t\;\phi\;.1 \to \delta^G.T\;x\;\phi\;t\] for all sorts $T : \Pi(x : X).A \to \UU \in \Delta$, $x : X$, $t : A^{PC_2}$, and $\phi : \Ix T\;\delta^G\;x$. The equations state that \begin{align*}(E\;\delta^G).B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\;\phi\;.1&\text{ reduces to }\Arg F\;\delta^G\;x\;a\;\phi\text{ and }\\(E\;\delta^G).B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\;\phi\;.2&\text{ reduces to }\delta^G.F\;x\;a\;\phi\end{align*} for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}\in \Delta$.
+
+Now we construct the new goodness algebra $(S\;\delta^G)$ along with a set of projection functions \begin{align*}(\delta^\pi\;\delta^G).T\;x &: \Ix T\;(S\;\delta^G)\;x \to \Ix T \;\delta^G\;x\\(\delta^\pi\;\delta^G).T\;x&\;a = \text{let $(a_1,a_2)$ := $A^{\Pi}\;(S\;\delta^G)\;\emptytuple\;a$ in }A^\Sigma\;\delta^G\;\emptytuple\; (a_1, A^\pi\;\emptytuple\;a_1\;a_2)\end{align*} for each sort $T : \Pi(x : X).A\to\UU\in\Delta$ and \begin{align*}(\delta^\pi\;\delta^G).F\;x\;a\;\phi&:\Arg F\;(S\;\delta^G)\;x\;a\;\phi \to \Arg F\;\delta^G\;x\;a\;((\delta^\pi\;\delta^G).B\;\hat{r}\;\phi)\\(\delta^\pi\;\delta^G).F\;x\;a\;\phi&\;(a^G,p) = (A^\pi\;\emptytuple\;a\;a^G,\text{cong}\;((\delta^\pi\;\delta^G).B\;\hat{r})\;p)\end{align*}
+for every operation $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}\in\Delta$, where
+$A^\pi\;\xi\;a : A^G\;(S\;\delta^G)\;\xi\;a \to A^G\;\delta^G\;\xi\;a$ is defined component-wise by \[(T\;\hat{x}\;\hat{a})^\pi\;\xi\;a\;a^G = (E\;\delta^G).T\;\hat{x}\;a\;(\hat{a}^C\;(\Delta^\Sigma\;\delta^G)\;\xi)\;.2\;a^G\] applying the projection function given by the second component of the eliminator.
+The components of $(S\;\delta^G)$ are given by \begin{align*}(S\;\delta^G).T\;x\;\phi\;t &= (E\;\delta^G).T\;x\;t\;((\delta^\pi\;\delta^G).T\;x\;\phi)\;.1,\\(S\;\delta^G).F &= (\delta^\pi\;\delta^G).F.\end{align*}
+\begin{align*}
+\shortintertext{This typechecks because $(S\;\delta^G).F\;x\;a\;\phi$ is supposed to have codomain}
+&\;(S\;\delta^G).B\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a)
+\shortintertext{which is defined to be}
+&\;(E\;\delta^G).B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\;((\delta^\pi\;\delta^G).B\;\hat{r}\;\phi)\;.1
+\shortintertext{which the computation rule for the pre-syntax says reduces on $\delta^{PC_2}.F\;x\;a$ to}
+&\;\Arg F\;\delta^G\;x\;a\;((\delta^\pi\;\delta^G).B\;\hat{r}\;\phi),
+\shortintertext{which is the codomain of $(\delta^\pi\;\delta^G).F\;x\;a\;\phi$.}
+\end{align*}
+
+\end{subsection}
+
+\begin{subsection}{limit of a chain}\label{chain}
+
+Here we add one lemma about chains that we didn't need in \S\ref{example-construct-cubical}, but do need to handle infinitary parameters in \S\ref{limit-alg}.
+
+\begin{lemma}[\label{limit-pi-commute}chain commutes with dependent functions]
+    Given \begin{align*}
+    C &: \USet,\\
+    X &: C \to \N \to \II \to \USet,\\
+    \pi &: (c : C) \to (n : \N) \to X\;c\;(1+n)\;i_0 \to X\;c\;n\;i_1,\\
+    Y &: C \to \USet,\\
+    e &: (c : C) \to Y\;c \simeq \text{chain.t}\;(X\;c)\;(\pi\;c),
+    \end{align*}
+    the following holds:
+    \begin{gather*}
+    ((c : C) \to Y\;c) \simeq \text{chain.t}\;(\lambda n.\lambda i.(c : C) \to X\;c\;n\;i)\;(\lambda n.\lambda x.\lambda c. \pi\;c\;n\;(x\;c)).
+    \end{gather*}
+\end{lemma}
+
+\end{subsection}
+\begin{subsection}{limit of goodness algebras}\label{limit-alg}
+Given a goodness algebra $\bbO : \Delta^G$, we now need to take the limit of $\bbO$, $S\;\bbO$, $S\;(S\;\bbO)$, \dots and show that it is nice.
+Define $S^n\;\bbO$ by \begin{align*}S^0\;\bbO &= \bbO,\\ S^{1+n}\;\bbO &= S\;(S^n\;\bbO).\end{align*}
+
+We now define the limit $L : \Delta^G$, along with a proof that it is nice $L^N : \Delta^N\;L$.
+
+For each sort $T : \Pi(x : X).A \to \UU \in \Delta$, define \[\Ix_\simeq.T\;x : \Ix T\;L\;x\simeq\text{chain.t}\;(\lambda n.\lambda i.\Ix T\;(S^n\;\bbO)\;x)\;(\lambda n.(\delta^\pi\;(S^n\;\bbO)).T\;x)\] to convert the inductive indices of the limit to a chain of inductive indices for each $S^n\;\bbO$ using the lemmas from \S\ref{ex-chain} and \S\ref{chain},
+and then for each $x : X$, $\phi : \Ix T\;L$, and $a : A^{PC_2}$, letting $\phi' = \Ix_\simeq.B\;x\;\phi$ we can use Lemma \ref{limit-sort-lemma} with \begin{align*}
+X\;n &= \Ix T\;(S^n\;\bbO)\;x,\\
+\pi_X\;n &= (\delta^\pi\;(S^n\;\bbO)).T\;x,\\
+Y_0\;n\;\phi &= (S^n\;\bbO).T\;x\;\phi\;a,\\
+Y_1\;n\;\phi &= (E\;(S^n\;\bbO)).T\;x\;a\;\phi\;.1,\\
+f\;n\;\phi &= (E\;(S^n\;\bbO)).T\;x\;a\;\phi\;.2,\\
+g\;n\;\phi &= \lambda y.y,\\
+x &= \phi'.
+\end{align*}
+to define $L.T\;x\;\phi\;a$ as $t$ from the statement of the lemma, with $t_\simeq.T\;x\;\phi\;a$ of type \begin{gather*}\text{chain.t}\;(\lambda n.\lambda i.(E\;(S^n\;\bbO)).T\;x\;a\;(\phi'.p\;n\;i)\;.1)\;(\lambda n.(E\;(S^{1+n}\;\bbO)).T\;x\;a\;(\phi'.p\;(1+n)\;i_0)\;.2)\\ \simeq\\ L.T\;x\;\phi\;a\end{gather*} defined from the result. We can take \[g\;n\;\phi : (S\;(S^n\;\bbO)).T\;x\;\phi\;a \to (E\;(S^n\;\bbO)).T\;x\;a\;((\delta^\pi\;(S^n\;\bbO)).T\;x\;\phi)\;.1\] to be the identity because the domain and codomain are equal by the definition of $(S\;(S^n\;\bbO)).T$ (see \ref{successor-alg}).
+
+Finally, for each operation $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in \Delta$, given $x : X$, $a : A^{PC_2}$, $\phi : \Ix B\;L\;\hat{r}$, we let $\phi' = \Ix_\simeq.B\;\hat{r}\;\phi$ and define $\Arg_\simeq^+.F\;x\;a\;\phi$ of type \begin{gather*}\Arg F\;L\;x\;a\;\phi\\\simeq\\\text{chain.t}\;(\lambda n.\lambda i.\Arg F\;(S^n\;\bbO)\;x\;a\;(\phi'.p\;n\;i))\;(\lambda n.(\delta^\pi\;(S^{n+1}\;\bbO)).F\;x\;a\;(\phi'.p\;(1+n)\;i_0))\end{gather*} again using the lemmas from \S\ref{ex-chain} and \S\ref{chain}; since $\Arg F\;L\;x\;a\;\phi$ is defined as \[\Arg F\;\delta^G\;x\;a\;\phi = (a^G : A^G\;\delta^G\;\emptytuple\;a)\times\IdA{\hat{s}^C\;(\Delta^{\Sigma}\;\delta^G)\;\langle A^{\Sigma}\;\delta^G\;\emptytuple\;(a,a^G)\rangle}{\phi}{\Ix B\;\delta^G\;\hat{r}},\] we use Lemma \ref{limit-pair-commute} to distribute over the dependent pair, with equivalence of the second component given by using $\Ix_\simeq.B$ after distributing over the identity type with Lemma \ref{limit-Id-commute}.
+Then consider $t_\simeq.B\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a)$, which has type
+\begin{gather*}
+\begin{align*}
+\text{chain.t}&\;(\lambda n.\lambda i.(E\;(S^n\;\bbO)).B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\;(\phi'.p\;n\;i)\;.1)\\&\;(\lambda n.(E\;(S^{1+n}\;\bbO)).B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\;(\phi'.p\;(1+n)\;i_0)\;.2)\qquad\qquad\end{align*}
+\\ \simeq\\ L.T\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a).\end{gather*}
+Applying the equations to $E$ (see \ref{successor-alg}), we see that \begin{align*}(E\;(S^n\;\bbO)).B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\;(\phi'.p\;n\;i)\;.1&\text{ reduces to }\Arg F\;(S^n\;\bbO)\;x\;a\;(\phi'.p\;n\;i)
+\shortintertext{ and }
+(E\;(S^{1+n}\;\bbO)).B\;\hat{r}\;(\delta^{PC_2}.F\;x\;a)\;(\phi'.p\;(1+n)\;i_0)\;.2&\text{ reduces to }(S^{1+n}\;\bbO).F\;x\;a\;(\phi'.p\;(1+n)\;i_0),\\
+\text{which by definition of $(S\;(S^n\;\bbO)).F$ further}&\text{ reduces to }
+(\delta^\pi\;(S^n\;\bbO)).F\;x\;a\;(\phi'.p\;(1+n)\;i_0).\end{align*}
+These reductions imply that the right side of $\Arg_\simeq^+.F$ and the left side of $t_\simeq.B\;\hat{r}\;\phi\;(\delta^{PC_2}.F\;x\;a)$ are the same type; composing these equivalences yields \[(L.F,L^N.F) : \Arg F\;L\;x\;a\;\phi \simeq L.T\;x\;\phi\;(\delta^{PC_2}\;x\;a),\] which is the data we need for a nice operation.
+
+Therefore, we have constructed a nice goodness algebra given any starting goodness algebra $\bbO$.
+
+\end{subsection}
+\begin{subsection}{final goodness algebra}\label{final-alg}
+To complete the proof, we have to show that a goodness algebra exists. Luckily, this is easy. Take $\bbO$ to be given by \[\bbO.T\;x\;\phi\;t = \top\] for all sorts $T : \Pi(x : X).A\to\UU\in\Delta$ and \[\bbO.F\;x\;a\;\phi\;a^G = \star\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s}\in\Delta$. Therefore a goodness algebra $\bbO$ exists, so if we take the limit of $\bbO$, $S\;\bbO$, $S\;(S\;\bbO)$, \dots, then we obtain a nice goodness algebra (\S\ref{limit-alg}), therefore we can construct the simple elimination rules (\S\ref{niceness}).
+\end{subsection}
+
+\end{section}
+
+\begin{figure}[htpb]
+    \begin{flushleft}
+        This paper uses a large number of defined terms to refer to various methods, motives, elimination rules, and more. Here we give a quick index of their names and meanings.
+    \end{flushleft}
+    
+    \begin{description}
+        \item[$-^C$:] The standard interpretation of inductive-inductive objects. Usually $\delta : \Delta^C$, with $\delta.T\;x\;a$ giving the interpretation of sort $T$ with non-inductive index $x$ and inductive index $a$, and $\delta.F\;x\;a$ giving the interpretation of the operation $F$ with non-inductive argument $x$ and inductive argument $a$.
+        \item[$-^{M_1}$:] The motives for the simple elimination rules. Usually $\delta^{M_1} : \Delta^{M_1}$, with $\delta^{M_1}.T\;x\;a$ a predicate on $\delta.T\;x\;a$.
+        \item[$-^{M_2}$:] The methods for the simple elimination rules. Usually $\delta^{M_2} : \Delta^{M_2}\;\delta^{M_1}$, with $\delta^{M_2}.F$ for specific inductive steps.
+        \item[$-^{E_1}$:] The eliminators for the simple elimination rules, expressing that the motives are always satisfied. Specific eliminators are $\delta^{E_1}.T\;x\;a : (t : \delta.T\;x\;a) \to \delta^{M_1}.T\;x\;a\;t$.
+        \item[$-^{E_2}$:] The equations for the simple elimination rules. We only show that they hold up to propositional equality.
+        \item[$-^{PC_1}$:] The sorts of the pre-syntax. Usually $\delta^{PC_1} : \Delta^{PC_1}$, with $\delta^{PC_1}.T\;x$ for the specific sort $T$ with non-inductive index $x$. Not dependent on inductive indices.
+        \item[$-^{PC_2}$:] The constructors of the pre-syntax. Usually $\delta^{PC_2} : \Delta^{PC_2}\;\delta^{PC_1}$, with $\delta^{PC_2}.F\;x\;a$ for the pre-syntax constructor $x$ applied to non-inductive argument $x$ and inductive argument $a$.
+        \item[$-^{PM_1}$:] The motives for induction on the pre-syntax. Given $\delta^{PM_1} : \Delta^{PM_1}$, $\delta^{PM_1}.T\;x$ is the specific motive, a predicate on $\delta^{PC_1}.T\;x$.
+        \item[$-^{PM_2}$:] The methods for induction on the pre-syntax. Given $\delta^{PM_2} : \Delta^{PM_2}\;\delta^{PM_1}$, $\delta^{PM_2}.F$ is a specific inductive step.
+        \item[$-^{PE_1}$:] The eliminators for the pre-syntax. If $E : \Delta^{PE_1}\;\delta^{PM_1}$, then $E.T\;x : (t : \delta^{PC_1}.T\;x) \to \delta^{PM_1}.T\;x\;t$.
+        \item[$-^{PE_2}$:] The equations for the pre-syntax are given by $\Delta^{PE_2}$, which is unusual in that it is not a type but rather a meta-level proposition asserting the reduction behavior of the eliminators applied to constructors.
+        \item[$-^G$:] Goodness algebras. Typically $\delta^G : \Delta^G$, we have predicates $\delta^G.T\;x\;\phi\;t$ on the inductive indices $\phi : \Ix T\;\delta^G$ and the pre-syntax $t : \delta^{PC_1}.T\;x$, along with functions $\delta^G.F$ witnessing that the goodness predicates are preserved by operations on the pre-syntax. Can be turned into an inductive object $\Delta^\Sigma\;\delta^G : \Delta^C$.
+        \item[$-^N$] The niceness predicate. Usually $\delta^N : \Delta^N\;\delta^G$, where $\delta^N.F$ expresses that $\delta^G.F$ is not just a function but an equivalence.
+    \end{description}
+
+    See also \S\ref{IIspecs-definition} for the definition of $-^C$, \S\ref{simple-elim-section} for definitions related to the simple eliminators, \S\ref{pre-syntax} for definitions related to the pre-syntax (superscripts beginning with $P$), \S\ref{goodness-algebra} for $-^G$ and \S\ref{niceness} for $-^N$.
+    
+    \caption{\label{translation-index}Index of defined terms}
+\end{figure}
+
+}
+
+\begin{section}{Related Work}
+
+The principle of simultaneously defining a type and a family over that type has been used many times before. \citet{danielssonIRdeptype} used an inductive-inductive-recursive definition to define the syntax of dependent type theory, and \citet{CHAPMAN200921} used an inductive-inductive definition for the same purpose. Conway's surreal numbers are given (up to a defined equivalence relation) by the inductive-inductive definition of number and less than, where less than is a relation indexed by two numbers \citep{conway2000numbers}. The HoTT book \S11.3 gives a definition of the Cauchy reals as a higher inductive-inductive definition \citep{hottbook}.
+
+In his thesis and previous papers \citep{nordvallforsberg2013thesis,nordvallforsbergSetzer2010inductiveinductive,nordvallforsbergSetzer2012finIndind}, \Forsberg/ studies the general theory of inductive-inductive types, axiomatizing a limited class of such definitions, and giving a set theoretic model showing that they are consistent. He also considers various extensions such as allowing a third type indexed by the first two, allowing the second type to be indexed by two elements of the first, or combining inductive-inductive definitions with inductive-recursive definitions from \citet{finiteaxiomatizationIR}.
+
+There have been a few attempts to define a general class of inductive-inductive types larger than that \Forsberg/ gave in his thesis. \citet{Altenkirch2016QuotientIT} gives a semantic description of one large class, and \citet{KaposiKovacsHIITsyntax} gives a more syntactic description of another, but neither gives a type of codes that can be reasoned about internally. Working with UIP, \citet{AltenkirchKaposiKovacsConstructingQIITs} propose a class of quotient inductive-inductive types.
+
+\Forsberg/'s thesis \citep{nordvallforsberg2013thesis} appears to give the best known reduction of inductive-inductive types to regular inductive types known. As we have shown, \Forsberg/'s approach can only be applied to intensional type theory if UIP holds. Furthermore, the equations for both \Forsberg/'s approach and our approach only hold propositionally.
+
+Many other structures have also been reduced to plain inductive types. Our construction of inductive-inductive types can be seen as an adaptation of the technique in \citet{nonwellfoundedtrees}, where coinductive types are constructed from $\N$ by taking a limit. Indexed inductive types (which are used in \Forsberg/'s construction) are constructed from plain inductive types in \citet{altenkirch2015indexed}, with good computational properties (provided an identity type that satisfies $J$ strictly). And small induction-recursion is reduced to plain inductive-inductive types in \citet{alti:tlca13-small-ir}.
+
+\end{section}
+
+\begin{section}{Conclusions and Future Work}
+
+In this paper, we have:
+\begin{enumerate}
+    \item Showed that the construction of inductive-inductive types given by \Forsberg/ implies UIP.
+    \item Given an alternative construction of inductive-inductive types in cubical type theory, which is compatible with Homotopy Type Theory.
+\end{enumerate}
+
+We claim that the construction of our specific running example is straightforwardly generalizable to other inductive-inductive types, and have formalized the construction of a number of other examples to support this claim.
+
+Going forward, we would like to investigate
+\begin{itemize}
+    \item An internal definition of inductive-inductive specifications in HoTT. Early experiments suggest that this requires surmounting difficulties related to increasingly complex coherence conditions similar to those encountered when defining semi-simplicial sets, c.f. \citet{simplicialsets}.
+    \item Extending the proof given here to construct the general elimination rules as given in \cite{KaposiKovacsHIITsyntax}.
+    \item Identifying needs to be added for the simple elimination rules to have the expected computational behavior. Given the similar construction method, this hopefully also allows the construction of coinductive types with nice computational behavior, c.f. \citet{nonwellfoundedtrees}.
+    \item In the opposite direction from the previous point, rewriting the construction given here in Coq + Function Extensionality. While the elimination rules will have poor computational behavior, this would make using inductive-inductive types in Coq possible without requiring any change to Coq itself, while being compatible with HoTT. In particular, using cubical type theory makes the proofs in \S\ref{ex-limit-alg} simpler, but we speculate that axiomatic function extensionality is sufficient.
+\end{itemize}
+
+\end{section}
+
+%% Acknowledgments
+\begin{section}{Acknowledgements}
+
+I would like to thank Talia Ringer and Dan Grossman from the UW PLSE lab, for their invaluable feedback during the revision process. I also thank Pavel Panchekha and John Leo for their comments.
+
+Some of this work was completed while studying at Tokyo Institute of Technology under Professor Ryo Kashima. I would like to thank Professor Kashima, as well as my fellow lab members and mentors Asami and Maniwa for making my stay both productive and enjoyable.
+
+\end{section}
+
+
+%% Bibliography
+\bibliography{bibliography}
+
+
+\end{document}
