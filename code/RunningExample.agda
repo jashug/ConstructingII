@@ -53,7 +53,7 @@ module _ ℓX (X : Set ℓX) where
   simple-eliminators ℓ T = (P : Motives-Methods ℓ T) → Eliminators-Equations ℓ T P
 
   module pre where
-    -- Section 5.1: pre-syntax
+    -- Section 3.1: pre-syntax
     -- this is a standard mutual inductive definition
     data A : Set ℓX
     data B : Set ℓX
@@ -63,7 +63,7 @@ module _ ℓX (X : Set ℓX) where
     data B where
       inj : A → B
 
-  -- Section 5.2: goodness algebras
+  -- Section 3.2: goodness algebras
   -- now we define Ix and Arg
   Ix-A : Set
   Ix-A = ⊤
@@ -104,7 +104,7 @@ module _ ℓX (X : Set ℓX) where
   O .Good.join (a , b) ϕ t = ★
   O .Good.inj a ϕ t = ★
 
-  -- Section 5.3: niceness
+  -- Section 3.3: niceness
   record Nice (G : Good) : Set ℓX where
     open Good G
     field
@@ -161,7 +161,7 @@ module _ ℓX (X : Set ℓX) where
       (λ ϕ good-b → PB ϕ (pre.inj a , good-b))
       (λ good-a → Pinj (a , good-a) (EA a good-a)) .fst ϕ
 
-  -- Section 5.4: successor goodness algebra
+  -- Section 3.4: successor goodness algebra
   module succ (G : Good) where
     module E where
       A : (a : pre.A) → (ϕ : Ix-A) → Σ[ Y ∈ Set ℓX ] (Y → G .Good.A ϕ a)
@@ -198,9 +198,9 @@ module _ ℓX (X : Set ℓX) where
     alg .Good.join = πjoin
     alg .Good.inj = πinj
 
-  -- See Chain.agda for the Limit of Sets subsection of Section 5.5
+  -- See Chain.agda for the Limit of Sets subsection of Section 3.5
 
-  -- Section 5.5: limit of goodness algebras
+  -- Section 3.5: limit of goodness algebras
   module limit (O : Good) where
     open chain-≃
 

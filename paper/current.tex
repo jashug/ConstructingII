@@ -66,13 +66,8 @@
   {\leavevmode\hbox\bgroup}
   {\DisplayProof\egroup}
 
-%\DeclareMathOperator{\Ctx}{Ctx}
-%\DeclareMathOperator{\Ty}{Ty}
-\DeclareMathOperator{\USet}{Set}
+\DeclareMathOperator{\USet}{Type}
 \DeclareMathOperator{\UU}{U}
-%\DeclareMathOperator{\El}{El}
-%\DeclareMathOperator{\step}{step}
-%\DeclareMathOperator{\join}{join}
 \DeclareMathOperator{\isSort}{isSort}
 \DeclareMathOperator{\head}{head}
 \DeclareMathOperator{\isEquiv}{isEquiv}
@@ -124,7 +119,7 @@ we can simultaneously define contexts and types defined in a context:
 \end{align*}
 Such definitions have been used for example by \citet{danielssonIRdeptype} and \citet{CHAPMAN200921} to define intrinsically typed syntax of a dependent type theory, and Agda supports such definitions natively.
 
-These types have been studied extensively in \citet{nordvallforsberg2013thesis}. There, in \S5.3, inductive-inductive types with simple elimination rules (defined in \S3.2.5) are constructed from indexed inductive types in extensional type theory, and in \S5.4 the same construction is conjectured to work in intensional type theory.
+These types have been studied extensively in \citet{nordvallforsberg2013thesis}. There, in \S5.3, inductive-inductive types with simple elimination rules (defined in op. cit. \S3.2.5) are constructed from indexed inductive types in extensional type theory, and in \S5.4 this is conjectured to work in intensional type theory as well.
 
 In this paper, we first show that this construction does not work in intensional type theory without assuming Uniqueness of Identity Proofs (UIP), which is incompatible with the Univalence axiom of Homotopy Type Theory \citep{hottbook}. We then give an alternate construction in cubical type theory \citep{cubicaltt_ifcolog}, which is compatible with Univalence.
 %, and make progress towards constructing the general elimination rules.
@@ -139,15 +134,15 @@ Specifically, this paper makes the following contributions:\footnote{The formali
 
 \end{section}
 
-\begin{section}{Syntax and Conventions}
-    Here we describe various pieces of syntax and conventions used in this paper. We mostly mimic Agda syntax. The double bar symbol $=$ is used for definitions directly and by pattern matching, and for equality of terms up to conversion. We write $(a : A) \to B$ for the dependent product type, and $A \to B$ for the non-dependent version. Functions are given by pattern matching $f\; x = y$ or by lambda expressions $f = \lambda x.y$. Similarly $(a : A) \times B$ is the dependent pair type, and $A \times B$ the non-dependent version. Pairs are $(a, b)$, and projections are $p.1$ and $p.2$. The unit type is $\top$, with unique inhabitant $\star$. Identity types are $\IdA{x}{y}{X}$ for the type of identifications of $x$ with $y$ in type $X$, and we write $\refl$ for a proof of reflexivity. We do not assume that axiom K holds for identity types.\erase{ We often use left-nested dependent pair types, or tuples $(\star : \top) \times (a : A) \times (b : B) \times C$. We will use $\langle a, b, c\rangle$ as a shorthand for $(((\star, a), b), c)$, and if there are names associated with the components, such as $A$, $B$, and $C$ above, we may use $\langle p.A, p.B, p.C\rangle$ for the projections.} We write $\USet$ for a universe of types.
+\begin{subsection}{Syntax and Conventions}
+    We mostly mimic Agda syntax. The double bar symbol $=$ is used for definitions directly and by pattern matching, and for equality of terms up to conversion. We write $(a : A) \to B$ for the dependent product type, and $A \to B$ for the non-dependent version. Functions are given by pattern matching $f\; x = y$ or by lambda expressions $f = \lambda x.y$. Similarly $(a : A) \times B$ is the dependent pair type, and $A \times B$ the non-dependent version. Pairs are $(a, b)$, and projections are $p.1$ and $p.2$. The unit type is $\top$, with unique inhabitant $\star$. Identity types are $\IdA{x}{y}{X}$ for the type of identifications of $x$ with $y$ in type $X$, and we write $\refl$ for a proof of reflexivity. We do not assume that axiom K holds for identity types.\erase{ We often use left-nested dependent pair types, or tuples $(\star : \top) \times (a : A) \times (b : B) \times C$. We will use $\langle a, b, c\rangle$ as a shorthand for $(((\star, a), b), c)$, and if there are names associated with the components, such as $A$, $B$, and $C$ above, we may use $\langle p.A, p.B, p.C\rangle$ for the projections.} We write $\USet$ for a universe of types (where Agda uses $\text{Set}$). In section \ref{example-construct-cubical} we work in cubical type theory, which will be explained there.
     
     \erase{ In section \ref{IIspecs-definition}, we define a syntactic extension of type theory, to write specifications of inductive-inductive types. There we use $\Pi$ to suggest dependent function types, $\Sigma$ to suggest dependent pair types, and $\UU$ to suggest a universe. However, these symbols will only be used in syntax for inductive-inductive specifications, and not to denote types. We reuse $\top$ and $\star$, as well as notations for lambda and pairing, letting context disambiguate. }
     
 
-\end{section}
+\end{subsection}
 
-\begin{section}{\label{II-examples}Running Example of an Inductive-Inductive Definition}
+\begin{subsection}{\label{II-examples}Concrete Example of an Inductive-Inductive Definition}
 
 \erase{
 Inductive-inductive definitions have many potential uses.
@@ -168,7 +163,7 @@ Here the $\eta$ rules express that $(A, \leq)$ is a sub-relation of $(A^*, \leq^
 }
 
 For the purposes of this paper, we will focus on one relatively simple inductive-inductive definition (with only 5 clauses), parametrized by a type $X$, which is given in Figure \ref{example-definition}.
-We will take this as our running example, and use it to prove that \Forsberg/'s construction implies UIP for $X$ (in \S\ref{derivingUIP}) and to demonstrate our construction in cubical type theory (in \S\ref{example-construct-cubical}).
+We will use this definition to prove that \Forsberg/'s construction implies UIP in \S\ref{derivingUIP} and as a running example to demonstrate our construction in cubical type theory in \S\ref{example-construct-cubical}.
 
 Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s, and $\eta$ gives us something to start with: one element of $A$ for each element of $X$.
 Our proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
@@ -208,14 +203,14 @@ Our goal in this paper is to construct $(A,B,\eta,\join,\inj)$ of the types give
 
 
 
-\end{section}
+\end{subsection}
 
 \begin{section}{Deriving UIP}\label{derivingUIP}
 
 Uniqueness of Identity proofs (UIP) for a type $X$ is the principle that, for all $x : X$, $y : X$, $p : \IdA{x}{y}{X}$, $q : \IdA{x}{y}{X}$, the type $\IdA{p}{q}{\IdA{x}{y}{X}}$ is inhabited. Equivalently, for all $x : X$, $p : \IdA{x}{x}{X}$, the type $\IdA{p}{\refl}{\IdA{x}{x}{X}}$ is inhabited. It expresses that there is at most one proof of any equality. UIP is independent of standard intensional type theory \citep{groupoidmodel}, and is inconsistent with Homotopy Type Theory \citep{hottbook}.
 
-\Forsberg/'s construction of inductive-inductive types is described in \citep[\S5.3]{nordvallforsberg2013thesis}. In this section, we show that if the simple elimination rules hold for \Forsberg/'s construction of the inductive-inductive type in Figure \ref{example-definition}, then UIP holds for the type $X$ (Theorem \ref{Forsberg-gives-UIP}).
-This argument has been formalized in Coq version 8.8.0 \citep{Coq880}, which does not natively support UIP and thus there is no danger of accidentally assuming our conclusion. See \texttt{UIP\textunderscore{}from\textunderscore{}Forsberg\textunderscore{}II.v}. The same argument has also been formalized in Agda using the \texttt{--without-K} flag to avoid UIP, see \texttt{UIP\textunderscore{}from\textunderscore{}Forsberg\textunderscore{}II.agda}
+\Forsberg/'s construction of inductive-inductive types is described in \citep[\S5.3]{nordvallforsberg2013thesis}. In this section, we show that if the simple elimination rules hold for this construction of the inductive-inductive type in Figure \ref{example-definition}, then UIP holds for the type $X$ (Theorem \ref{Forsberg-gives-UIP}).
+This argument has been formalized in both Coq version 8.8.0 \citep{Coq880} (see \texttt{UIP\textunderscore{}from\textunderscore{}Forsberg\textunderscore{}II.v}) and Agda using the \texttt{--without-K} flag (see \texttt{UIP\textunderscore{}from\textunderscore{}Forsberg\textunderscore{}II.agda})
 
 To recap, \citet[\S5.3]{nordvallforsberg2013thesis} constructs an inductive-inductive type by first defining an approximation (the \emph{pre-syntax}) which drops the $A$ index from $B$ leaving a mutual inductive definition. Concretely, we have $\pre{A}$ and $\pre{B}$ defined as in Figure \ref{example-pre-syntax}. Then a mutual indexed inductive definition is used to define the index relationship between $\pre{A}$ and $\pre{B}$, these are the goodness predicates $\good{A}$ and $\good{B}$. Finally, the inductive object $(A, B, \eta, \join, \inj)$ is defined by pairing the pre-syntax with goodness proofs (see Figure \ref{example-good-mutind}).
 
@@ -305,7 +300,7 @@ Now we prove that there are at least as many proofs of $B\;(\pre{t},\good{t})$ a
     Then $\Id{g\;(f\;\good{a})}{\good{a}}$ holds by reflexivity.
 \end{proof}
 
-\begin{lemma}[$B$ is contractible]\label{Bcontr}
+\begin{lemma}[$B\;a$ is contractible]\label{Bcontr}
     Assuming the simple elimination rules from Figure \ref{example-definition} hold for the $(A, B, \eta, \inj, \join)$ constructed above, for all $a : A$ and $b : B\;a$, $\IdA{\inj\;a}{b}{B\;a}$
 \end{lemma}
 \begin{proof}
@@ -350,10 +345,10 @@ The most important difference between cubical type theory and standard intension
 In this section, we construct the running example from Figure \ref{example-definition}, along with the simple elimination rules, in cubical type theory. Our construction proceeds in several steps:
 \begin{itemize}
     \item In \S\ref{ex-pre-syntax}, we approximate by dropping the indices, leaving a standard mutual inductive definition called the \emph{pre-syntax}. This is the same as the pre-syntax given in Figure \ref{example-pre-syntax}.
-    \item In \S\ref{ex-goodness-algebra}, we define \emph{goodness algebras}, collections of predicates over the pre-syntax which define the index relationship (analogously to $\good{A}$ and $\good{B}$ from \S\ref{derivingUIP}). We also show that some goodness algebra exists, and call it $\bbO$.
+    \item In \S\ref{ex-goodness-algebra}, we define \emph{goodness algebras}, collections of predicates over the pre-syntax which define the index relationship (analogously to $\good{A}$ and $\good{B}$ from \S\ref{derivingUIP}). We also show that a goodness algebra exists, and call it $\bbO$.
     \item In \S\ref{ex-niceness}, we define a predicate \emph{nice} on goodness algebras, such that if we have a nice goodness algebra, then we can construct the simple elimination rules. Being nice is similar to having proofs of goodness be unique as in \S\ref{derivingUIP}.
     \item In \S\ref{ex-successor-alg}, we use pattern matching over the pre-syntax to define a function $S$ from goodness algebras to goodness algebras.
-    \item In \S\ref{ex-limit-alg}, we define the limit of the sequence \[\bbO, S\;\bbO, S\;(S\;\bbO), \dots, S^n\;\bbO,\dots\] and show that it is nice.
+    \item In \S\ref{ex-limit-alg}, we define the limit of the sequence \[\bbO, S\;\bbO, S\;(S\;\bbO), \dots, S^n\;\bbO,\dots\] and show that it is nice. This is the only section that utilizes the differences between cubical type theory and standard intentional type theory.
 \end{itemize}
 Given the nice goodness algebra in \S\ref{ex-limit-alg} we can then construct the simple elimination rules by \S\ref{ex-niceness}. This construction has been formalized in Agda (version 2.6.0 commit \texttt{bd338484d}) using the \texttt{--cubical} flag which implies \texttt{--without-K} (see \texttt{RunningExample.agda}).
 
@@ -363,7 +358,7 @@ The intuition for our construction is that the \Forsberg/'s approach of pairing 
 
 \begin{subsection}{Pre-syntax}\label{ex-pre-syntax}
 
-The pre-syntax is defined as a mutually inductive type, with sorts $\pre{A}$ and $\pre{B}$, and constructors $\pre{\eta}$, $\pre{\join}$, and $\pre{\inj}$, as given in Figure \ref{example-pre-syntax}. The constructors of the pre-syntax have the same types as the constructors of the full inductive-inductive definition (given in Figure \ref{example-definition}), except we replace $B\;a$ with $\pre{B}$ everywhere, ignoring the dependence of $B$ on $A$.
+The pre-syntax is the same as that used in \S\ref{derivingUIP}, defined as a mutually inductive type in Figure \ref{example-pre-syntax}. The constructors of the pre-syntax have the same types as the constructors of the full inductive-inductive definition (given in Figure \ref{example-definition}), except we replace $B\;a$ with $\pre{B}$ everywhere, ignoring the dependence of $B$ on $A$.
 
 Consider this as the closest approximation of the target inductive-inductive type by a standard inductive type; the dependence of $B$ on $A$ is the only new element that inductive-inductive definitions add. Of course, this is only an approximation. We can form elements of the pre-syntax, such as \[\pre{\join}\;(\pre{\eta}\;x)\;(\pre{\inj}\;(\pre{\eta}\;y))\] for $x \neq y$ that should be excluded from the inductive-inductive formulation, since $\inj\;(\eta\;y) : B\;(\eta\;y)$ while $\join\;(\eta\;x) : B\;(\eta\;x) \to A$.
 
@@ -413,12 +408,12 @@ We also define the goodness algebra $\bbO$ by
 
 In Figure \ref{example-goodness-algebra-def}, for each clause of the inductive-inductive specification, we define 3 things:
 \begin{enumerate}
-    \item A helper type, either $\Ix$ for sorts or $\Arg$ for operations.
+    \item For each sort $X$ a type $\Ix X$, and for each operation $F$ constructing an element of sort $X$, a family $\Arg F : Y \to \Ix X \to \USet$ where $Y$ collects the arguments of the operation in the pre-syntax. In later sections we will also write $\Ix X\;\delta^G$ and $\Arg F\;\delta^G$ to specify which goodness algebra we are working in.
     \item The type of the corresponding component in the goodness algebra. For sorts, this is a predicate relating $\Ix$ and the pre-syntax, while for the operations, this is a function witnessing that each element of $\Arg$ gives a goodness proof relating the index $\phi$ to the pre-syntax.
     \item A way to combine the goodness algebra with the pre-syntax to form an inductive-inductive object. For sorts, we pair the pre-syntax with a goodness proof, while for operations we apply the operation given by the goodness algebra.
 \end{enumerate}
 
-Comparing this definition to the construction in \S\ref{derivingUIP}, the mutual inductive definition of $\good{A}$ and $\good{B}$ in \S\ref{derivingUIP} has types equivalent to what results if the dependence of $\delta^G.B$ on $\delta^G.A$ (defined in Figure \ref{example-goodness-algebra-def}) is dropped, going from \[\delta^G.B : (a : \pre{A}) \times \delta^G.A\;\star\;a \to \pre{B} \to \USet \quad\text{to}\quad \good{B} : \pre{A} \to \pre{B} \to \USet.\] The other difference is that we replace the inductive index (call it $s$) in the conclusion by a fresh variable $\phi$, with the condition $s = \phi$ included in $\Arg$.
+Comparing this definition to the construction in \S\ref{derivingUIP}, the mutual inductive definition of $\good{A}$ and $\good{B}$ in \S\ref{derivingUIP} has types equivalent to what results if the dependence of $\delta^G.B$ on $\delta^G.A$ (defined in Figure \ref{example-goodness-algebra-def}) is dropped, going from \[\delta^G.B : (a : \pre{A}) \times \delta^G.A\;\star\;a \to \pre{B} \to \USet \text{ to } \good{B} : \pre{A} \to \pre{B} \to \USet.\] The other difference is that we replace the inductive index (call it $s$) in the conclusion by a fresh variable $\phi$, with the condition $s = \phi$ included in $\Arg$.
 
 \erase{
 Consider the sort $B$. The inductive index of $B$ is $a : A$, so we set $\Ix B = A$. Our goodness algebra has a predicate $\delta^G.B : \Ix B \to \pre{B} \to \USet$, which defines a relation between the inductive index and the pre-syntax. And we define an elements of $B\;\phi$ to be pairs of pre-syntax with a proof that it is related to $\phi$ by the goodness algebra. The definition of the sort $A$ follows the same pattern, but there $A$ has no inductive index, or rather has $\top$ as the inductive index, so we set $\Ix A = \top$.
@@ -466,7 +461,7 @@ However, the dependence of $\delta^G.B$ on $\delta^G.A$ makes this what \Forsber
 \end{lemma}
 \begin{proof}
 
-The proof is formalized as Lemma 5.2 in \texttt{RunningExample.agda}. The main idea of the proof is to induct on the pre-syntax, and exploit the equivalences provided by niceness $\delta^N$. In the $\inj$ case for example, we have a proof of $\delta^G.B\;\phi\;(\pre{\inj}\;a)$. But without loss of generality, we can replace that goodness proof with $\delta^G.\inj$ applied to an element of $\Arg\inj\;a\;\phi$, which contains both a proof $\good{a} : \delta^G.A\;\star\;a$ and a proof that $\Id{(a, \good{a})}{\phi}$. Using $J$ to eliminate that equality leaves a goal to which the provided simple induction step for $\inj$ applies.
+The proof is formalized in \texttt{RunningExample.agda}. The main idea of the proof is to induct on the pre-syntax, and exploit the equivalences provided by niceness $\delta^N$. In the $\inj$ case for example, we have a proof of $\delta^G.B\;\phi\;(\pre{\inj}\;a)$. But without loss of generality, we can replace that goodness proof with $\delta^G.\inj$ applied to an element of $\Arg\inj\;a\;\phi$, which contains both a proof $\good{a} : \delta^G.A\;\star\;a$ and a proof that $\Id{(a, \good{a})}{\phi}$. Using $J$ to eliminate that equality leaves a goal to which the provided simple induction step for $\inj$ applies. This proof does not use cubical type theory in any essential way.
 
 \erase{
 Assume motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$
@@ -505,9 +500,9 @@ We are trying to create a nice goodness algebra by taking the limit of successiv
 We define by pattern matching \begin{align*}
 (E\;\delta^G).A : (a : \pre{A}) &\to (\phi : \Ix A\;\delta^G) \to (Y : \USet) \times (Y \to \delta^G.A\;\phi\;a),\\
 (E\;\delta^G).B : (b : \pre{B}) &\to (\phi : \Ix B\;\delta^G) \to (Y : \USet) \times (Y \to \delta^G.B\;\phi\;b),\\
-(E\;\delta^G).A\;(\pre{\eta}\;x) &= \lambda \phi. \Arg\eta\;x\;\phi, \delta^G.\eta\;x\;\phi,\\
-(E\;\delta^G).A\;(\pre{\join}\;a\;b) &= \lambda \phi. \Arg\join\;(a, b)\;\phi, \delta^G.\join\;(a, b)\;\phi,\\
-(E\;\delta^G).B\;(\pre{\inj}\;a) &= \lambda \phi. \Arg\inj\;a\;\phi, \delta^G.\inj\;a\;\phi,
+(E\;\delta^G).A\;(\pre{\eta}\;x) &= \lambda \phi. \Arg\eta\;\delta^G\;x\;\phi, \delta^G.\eta\;x\;\phi,\\
+(E\;\delta^G).A\;(\pre{\join}\;a\;b) &= \lambda \phi. \Arg\join\;\delta^G\;(a, b)\;\phi, \delta^G.\join\;(a, b)\;\phi,\\
+(E\;\delta^G).B\;(\pre{\inj}\;a) &= \lambda \phi. \Arg\inj\;\delta^G\;a\;\phi, \delta^G.\inj\;a\;\phi,
 \end{align*}
 which gives a new property $Y$ which maps back to $\delta^G.B\;\phi\;b$ for each $b$ and $\phi$, and similarly for $A$.
 
@@ -543,7 +538,7 @@ We define the successor algebra $(S\;\delta^G)$ along with projection functions 
 
 The projection functions $(\delta^\pi\;\delta^G)$ consist of applying the map given by the second component of $(E\;\delta^G)$ everywhere in sight. The sorts are then defined by the first component of $(E\;\delta^G)$ (using the projection function to fix up the index), while the operations can be defined to be the corresponding projection function itself.
 
-Concretely, for the sort $B$, we define $(\delta^\pi\;\delta^G).B$ to map between $\Ix B\; (S \delta^G)$ and $\Ix B\;\delta^G$. This consists of applying the function $((E\;\delta^G).A\;\pre{a}\;\star\;.2)$ to $\good{a}$ which we defined by pattern matching above. Then, since $(S\;\delta^G).B$ gets an inductive index $\phi$ in $(S\;\delta^G)$ but $((E\;\delta^G)\;b\;\phi\;.1)$ is expecting an inductive index in $\delta^G$, we span the gap with the projection function $(\delta^\pi\;\delta^G).B$ just defined. The definition of $A$ follows the same pattern, but the definition of $(\delta^\pi\;\delta^G).A$ is even simpler because $\Ix A = \top$ regardless of what goodness algebra we are working in.
+Concretely, for the sort $B$, we define $(\delta^\pi\;\delta^G).B$ to map between $\Ix B\; (S \delta^G)$ and $\Ix B\;\delta^G$. This consists of applying the function $((E\;\delta^G).A\;\pre{a}\;\star\;.2)$ which we defined by pattern matching above to $\good{a}$. Then, since $(S\;\delta^G).B$ gets an inductive index $\phi$ in $(S\;\delta^G)$ but $((E\;\delta^G)\;b\;\phi\;.1)$ is expecting an inductive index in $\delta^G$, we span the gap with the projection function $(\delta^\pi\;\delta^G).B$ just defined. The definition of $A$ follows the same pattern, but the definition of $(\delta^\pi\;\delta^G).A$ is even simpler because $\Ix A\;\delta^G = \top$ regardless of what goodness algebra we are working in.
 
 For the operations, consider $\inj$. Like with the sorts, we first define a projection function $(\delta^\pi\;\delta^G).\inj\;a\;\phi$, which maps from $\Arg\inj\;(S\;\delta^G)$ to $\Arg\inj\;\delta^G$, and we fix up the inductive index $\phi$ with $(\delta^\pi\;\delta^G).B$. For the first component of $\Arg$, we use the function given by the second component of $(E\;\delta^G).A$ to fix up $\good{a}$. For the second component, applying the projection $(\delta^\pi\;\delta^G).B$ to the equality proof works out on the left hand side because all these projection functions are doing the same thing: applying the function given by the second component of $(E\;\delta^G)$ everywhere. Finally, we can define $(S\;\delta^G).\inj = (\delta^\pi\;\delta^G).\inj$, because $(S\;\delta^G).\inj\;a\;\phi$ is supposed to have codomain \[(S\;\delta^G).B\;\phi\;(\pre{\inj}\;a)\] which is defined to be \[(E\;\delta^G).B\;(\pre{\inj}\;a)\;((\delta^\pi\;\delta^G).B\;\phi)\;.1\] which reduces on $(\pre{\inj}\;a)$ to \[\Arg\inj\;\delta^G\;a\;((\delta^\pi\;\delta^G).B\;\phi),\] which is exactly the codomain of $(\delta^\pi\;\delta^G).\inj\;a\;\phi$.
 
@@ -551,15 +546,22 @@ For the operations, consider $\inj$. Like with the sorts, we first define a proj
 
 \begin{subsection}{Limit of Goodness Algebras}\label{ex-limit-alg}
 
-We will now construct a nice goodness algebra by taking the limit of the sequence $\bbO, S\;\bbO, S\;(S\;\bbO), \dots$ and showing that it is nice. Here $S^n\;\bbO$ is defined recursively by \[S^0\;\bbO = \bbO,\qquad S^{1+n}\;\bbO = S\;(S^n\;\bbO).\]
+We will now construct a nice goodness algebra by taking the limit of the sequence $S^n\;\bbO$ and showing that it is nice, where $S^n\;\bbO$ is defined recursively by \[S^0\;\bbO = \bbO,\qquad S^{1+n}\;\bbO = S\;(S^n\;\bbO).\]
 
 \begin{subsubsection}{Limit of Sets}
     
     For the formalization of this section, see \texttt{Chain.agda}.
     
-    In order to take the limit of successive goodness algebras, we need to know how to work with \emph{chains} of types. Specifically, given $(X : \N \to \II \to \USet)$ and $\pi : (n : \N) \to X\;(n+1)\;i_0 \to X\;n\;i_1$, we consider the type \[\text{chain.t}\;X\;\pi = (f : (n : \N) \to X\;n\;i_0)\times((n : \N) \to \IdA{f\;n}{\pi\;n\;(f\;(n+1))}{X\;n}.\] If we have $x : \text{chain.t}\;X\;\pi$, then let $x.p$ denote the second projection.
+    In order to take the limit of successive goodness algebras, we need to know how to work with \emph{chains} of types. Specifically, given $(X : \N \to \II \to \USet)$ and $\pi : (n : \N) \to X\;(n+1)\;i_0 \to X\;n\;i_1$, we consider the type \[\text{chain.t}\;X\;\pi = (f : (n : \N) \to X\;n\;i_0)\times((n : \N) \to \IdA{f\;n}{\pi\;n\;(f\;(n+1))}{X\;n}.\] If we have $x : \text{chain.t}\;X\;\pi$, then let $x.p$ denote the second projection. 
     
-    We take $X$ to be a whole line of types rather than a single type because it makes dependent chains easy: given \begin{gather*}A : \N\to \USet\qquad\text{with}\qquad f_A : (n : \N) \to A\;(1+n) \to A\;n\qquad \text{and}\\B : (n : \N) \to A\;n \to \USet\qquad\text{with}\\f_B : (n : \N) \to (a : A\;(1+n)) \to B\;(1+n)\;a \to B\;n\;(f_A\;n\;a),\end{gather*} we can form \begin{align*}LA &= \text{chain.t}\;(\lambda n.\lambda i. A\;n)\;f_A &&: \USet,\\LB &= \lambda a.\;\text{chain.t}\;(\lambda n.\lambda i. B\;n\;(a.p\;n\;i))\;(\lambda n. f_B\;n\;(a.p\;(1+n)\;i_0)) &&: LA \to \USet\end{align*} without needing to transport anything.
+    This definition is designed to work well in cubical type theory, and uses the interval type and native heterogeneous equality. We take $X$ to be a whole line of types rather than a single type because it makes dependent chains easy: given
+    \begin{gather*}A : \N\to \USet\qquad\text{with}\qquad f_A : (n : \N) \to A\;(1+n) \to A\;n\qquad \text{and}\\B : (n : \N) \to A\;n \to \USet\qquad\text{with}\\f_B : (n : \N) \to (a : A\;(1+n)) \to B\;(1+n)\;a \to B\;n\;(f_A\;n\;a),\end{gather*}
+    we can form
+    \begin{align*}
+    LA &= \text{chain.t}\;(\lambda n.\lambda i. A\;n)\;f_A &:& \USet,\\
+    LB &= \lambda a.\text{chain.t}\;(\lambda n.\text{cong}\;(B\;n)\;(a.p\;n)\erase{\lambda i. B\;n\;(a.p\;n\;i)})\;(\lambda n. f_B\;n\;(a.p\;(1+n)\;i_0)) &:& LA \to \USet
+    \end{align*}
+    using $\text{cong}\;(B\;n)\;(a.p\;n)$ which is particularly nice in cubical type theory.
     
     This construction commutes with most type formers: dependent function types, dependent pair types, identity types, and constants. See the formalization for details.
     
@@ -609,7 +611,7 @@ We will now construct a nice goodness algebra by taking the limit of the sequenc
         x &: \text{chain.t}\;(\lambda n.\lambda i.X\;n)\;\pi_X,
         \end{align*}
         and letting the $X$ arguments to $f$ and $g$ be implicit,
-        we can define the types \begin{align*}t &= \text{chain.t}\;(\lambda n.\lambda i.Y_0\;n\;(x.p\;n\;i))\;(\lambda n.\lambda y.f\;n\;(g\;n\;y)),\\t^+ &= \text{chain.t}\;(\lambda n.\lambda i.Y_1\;n\;(x.p\;n\;i))\;(\lambda n.\lambda y.g\;n\;(f\;(1+n)\;y)).\end{align*}
+        we can define the types \begin{align*}t &= \text{chain.t}\;(\lambda n.\text{cong}\;(Y_0\;n)\;(x.p\;n))\;(\lambda n.\lambda y.f\;n\;(g\;n\;y)),\\t^+ &= \text{chain.t}\;(\lambda n.\text{cong}\;(Y_1\;n)\;(x.p\;n))\;(\lambda n.\lambda y.g\;n\;(f\;(1+n)\;y)).\end{align*}
         Applying $f$ component-wise gives a function from $t^+$ to $t$.
         This function is an equivalence.
     \end{lemma}
@@ -1222,7 +1224,7 @@ The principle of simultaneously defining a type and a family over that type has 
 
 In his thesis and previous papers \citep{nordvallforsberg2013thesis,nordvallforsbergSetzer2010inductiveinductive,nordvallforsbergSetzer2012finIndind}, \Forsberg/ studies the general theory of inductive-inductive types, axiomatizing a limited class of such definitions, and giving a set theoretic model showing that they are consistent. He also considers various extensions such as allowing a third type indexed by the first two, allowing the second type to be indexed by two elements of the first, or combining inductive-inductive definitions with inductive-recursive definitions from \citet{finiteaxiomatizationIR}.
 
-There have been a few attempts to define a general class of inductive-inductive types larger than that \Forsberg/ gave in his thesis. \citet{Altenkirch2016QuotientIT} gives a semantic description of one large class, and \citet{KaposiKovacsHIITsyntax} gives a more syntactic description of another, but neither gives a type of codes that can be reasoned about internally. Working with UIP, \citet{AltenkirchKaposiKovacsConstructingQIITs} propose a class of quotient inductive-inductive types.
+There have been several attempts to define a general class of inductive-inductive types larger than that \Forsberg/ gave in his thesis. \citet{Altenkirch2016QuotientIT} gives a semantic description of one large class, and \citet{KaposiKovacsHIITsyntax} gives a more syntactic description of another, but neither gives a type of codes that can be reasoned about internally. Working with UIP, \citet{AltenkirchKaposiKovacsConstructingQIITs} propose a class of quotient inductive-inductive types.
 
 \Forsberg/'s thesis \citep{nordvallforsberg2013thesis} appears to give the best previously known reduction of inductive-inductive types to regular inductive types known. As we have shown, \Forsberg/'s approach can only be applied to intensional type theory if UIP holds. Furthermore, the equations for both \Forsberg/'s approach and our approach only hold propositionally.
 
@@ -1238,12 +1240,12 @@ In this paper, we have:
     \item Given an alternative construction of inductive-inductive types in cubical type theory, which is compatible with Homotopy Type Theory.
 \end{enumerate}
 
-We claim that the construction of our specific running example is straightforwardly generalizable to other inductive-inductive types, and have formalized the construction of a number of other examples to support this claim.
+We claim that the construction of our specific running example is straightforwardly generalizable to other inductive-inductive types, and have formalized the construction of a number of other examples including types with non-finitary constructors and indices to support this claim (see the GitHub repositiory referenced in the introduction).
 
 Going forward, we would like to investigate
 \begin{itemize}
     \item An internal definition of inductive-inductive specifications in HoTT. Early experiments suggest that this requires surmounting difficulties related to increasingly complex coherence conditions similar to those encountered when defining semi-simplicial sets, c.f. \citet{simplicialsets}.
-    \item Extending the proof given here to construct the general elimination rules as given in \cite{KaposiKovacsHIITsyntax}.
+    \item Extending the proof given here to construct the general elimination rules. The general elimination rules were defined in \citet{nordvallforsberg2013thesis}, but in that formulation they rely on extensional type theory to be well typed. \citet{KaposiKovacsHIITsyntax} give equivalent rules which are well typed in intensional type theory.
     \item Identifying needs to be added for the simple elimination rules to have the expected computational behavior. Given the similar construction method, this hopefully also allows the construction of coinductive types with nice computational behavior, c.f. \citet{nonwellfoundedtrees}.
     \item In the opposite direction from the previous point, rewriting the construction given here in Coq + Function Extensionality. While the elimination rules will have poor computational behavior, this would make using inductive-inductive types in Coq possible without requiring any change to Coq itself, while being compatible with HoTT. In particular, using cubical type theory makes the proofs in \S\ref{ex-limit-alg} simpler, but we speculate that axiomatic function extensionality is sufficient.
 \end{itemize}
@@ -1253,7 +1255,7 @@ Going forward, we would like to investigate
 %% Acknowledgments
 \begin{section}{Acknowledgements}
 
-I would like to thank Talia Ringer and Dan Grossman from the UW PLSE lab, for their invaluable feedback during the revision process. I also thank Pavel Panchekha and John Leo for their comments.
+I would like to thank Talia Ringer and Dan Grossman from the UW PLSE lab, for their invaluable feedback throughout the revision process. I also thank Pavel Panchekha, John Leo, Remy Wang, and Fredrik \Forsberg/ for their comments.
 
 Some of this work was completed while studying at Tokyo Institute of Technology under Professor Ryo Kashima. I would like to thank Professor Kashima, as well as my fellow lab members and mentors Asami and Maniwa for making my stay both productive and enjoyable.
 
