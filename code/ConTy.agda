@@ -8,6 +8,7 @@ open import Chain
 -- This is the example given in the introduction
 -- note that we use U in the type of El
 -- (U, El) is supposed to represent a universe; El gives a type in the context Γ , U Γ.
+-- we add a constructor Π which uses join in a premise
 
 record Alg : Set₁ where
   field
@@ -15,6 +16,7 @@ record Alg : Set₁ where
     Ty : Con → Set
     ε : Con
     join : (Γ : Con) → Ty Γ → Con
+    Π : (Γ : Con) → (A : Ty Γ) → Ty (join Γ A) → Ty Γ
     U : (Γ : Con) → Ty Γ
     El : (Γ : Con) → Ty (join Γ (U Γ))
 
@@ -25,6 +27,7 @@ record Motives-Methods ℓ (T : Alg) : Set (lsuc ℓ) where
     PTy : ∀ Γ → Ty Γ → Set ℓ
     Pε : PCon ε
     Pjoin : ∀ Γ → PCon Γ → ∀ A → PTy Γ A → PCon (join Γ A)
+    PΠ : ∀ Γ → PCon Γ → ∀ A → PTy Γ A → ∀ B → PTy (join Γ A) B → PTy Γ (Π Γ A B)
     PU : ∀ Γ → PCon Γ → PTy Γ (U Γ)
     PEl : ∀ Γ → PCon Γ → PTy (join Γ (U Γ)) (El Γ)
 
@@ -36,6 +39,7 @@ record Eliminators-Equations ℓ (T : Alg) (P : Motives-Methods ℓ T) : Set ℓ
     ETy : ∀ Γ A → PTy Γ A
     Eε : ECon ε ≡ Pε
     Ejoin : ∀ Γ A → ECon (join Γ A) ≡ Pjoin Γ (ECon Γ) A (ETy Γ A)
+    EΠ : ∀ Γ A B → ETy Γ (Π Γ A B) ≡ PΠ Γ (ECon Γ) A (ETy Γ A) B (ETy (join Γ A) B)
     EU : ∀ Γ → ETy Γ (U Γ) ≡ PU Γ (ECon Γ)
     EEl : ∀ Γ → ETy (join Γ (U Γ)) (El Γ) ≡ PEl Γ (ECon Γ)
 
@@ -49,6 +53,7 @@ module pre where
     ε : Con
     join : Con → Ty → Con
   data Ty where
+    Π : Con → Ty → Ty → Ty
     U : Con → Ty
     El : Con → Ty
 
@@ -61,6 +66,15 @@ Arg-ε ϕ = Σ[ _ ∈ ⊤ ] (★ ≡ ϕ)
 Arg-join : (goodCon : Ix-Con → pre.Con → Set) (goodTy : Ix-Ty goodCon → pre.Ty → Set) →
            Σ[ _ ∈ pre.Con ] pre.Ty → Ix-Con → Set
 Arg-join goodCon goodTy (a , b) ϕ = Σ[ p ∈ Σ[ good-a ∈ goodCon ★ a ] goodTy (a , good-a) b ] (★ ≡ ϕ)
+Arg-Π : (goodCon : Ix-Con → pre.Con → Set) (goodTy : Ix-Ty goodCon → pre.Ty → Set) →
+        (good-join : ∀ p ϕ → Arg-join goodCon goodTy p ϕ → goodCon ϕ (pre.join (p .fst) (p .snd))) →
+        Σ[ _ ∈ Σ[ _ ∈ pre.Con ] pre.Ty ] pre.Ty → Ix-Ty goodCon → Set
+Arg-Π goodCon goodTy good-join ((Γ , A) , B) ϕ =
+  Σ[ p1 ∈ Σ[ p2 ∈ Σ[
+    good-Γ ∈ goodCon ★ Γ ]
+    goodTy (Γ , good-Γ) A ]
+    goodTy (pre.join Γ A , good-join (Γ , A) _ ((p2 .fst , p2 .snd) , refl)) B ]
+  ((Γ , p1 .fst .fst) ≡ ϕ)
 Arg-U : (goodCon : Ix-Con → pre.Con → Set) → pre.Con → Ix-Ty goodCon → Set
 Arg-U goodCon a ϕ = Σ[ good-a ∈ goodCon ★ a ] ((a , good-a) ≡ ϕ)
 Arg-El : (goodCon : Ix-Con → pre.Con → Set) (goodTy : Ix-Ty goodCon → pre.Ty → Set)
@@ -76,6 +90,7 @@ record Good : Set₁ where
     Ty : Ix-Ty Con → pre.Ty → Set
     ε : ∀ ϕ → Arg-ε ϕ → Con ϕ pre.ε
     join : ∀ p ϕ → Arg-join Con Ty p ϕ → Con ϕ (pre.join (p .fst) (p .snd))
+    Π : ∀ p ϕ → Arg-Π Con Ty join p ϕ → Ty ϕ (pre.Π (p .fst .fst) (p .fst .snd) (p .snd))
     U : ∀ a ϕ → Arg-U Con a ϕ → Ty ϕ (pre.U a)
     El : ∀ a ϕ → Arg-El Con Ty join U a ϕ → Ty ϕ (pre.El a)
 
@@ -85,6 +100,8 @@ Good→Alg G .Alg.Ty ϕ = Σ[ a ∈ pre.Ty ] G .Good.Ty ϕ a
 Good→Alg G .Alg.ε = pre.ε , G .Good.ε _ (★ , refl)
 Good→Alg G .Alg.join (pre-a , good-a) (pre-b , good-b) =
   pre.join pre-a pre-b , G .Good.join (pre-a , pre-b) ★ ((good-a , good-b) , refl)
+Good→Alg G .Alg.Π (pre-Γ , good-Γ) (pre-A , good-A) (pre-B , good-B) =
+  pre.Π pre-Γ pre-A pre-B , G .Good.Π ((pre-Γ , pre-A) , pre-B) _ (((good-Γ , good-A) , good-B) , refl)
 Good→Alg G .Alg.U (pre-a , good-a) = pre.U pre-a , G .Good.U pre-a _ (good-a , refl)
 Good→Alg G .Alg.El (pre-a , good-a) = pre.El pre-a , G .Good.El pre-a _ (good-a , refl)
 
@@ -93,6 +110,7 @@ O .Good.Con ϕ _ = ⊤
 O .Good.Ty ϕ _ = ⊤
 O .Good.ε ϕ _ = ★
 O .Good.join _ ϕ _ = ★
+O .Good.Π _ ϕ _ = ★
 O .Good.U _ ϕ _ = ★
 O .Good.El _ ϕ _ = ★
 
@@ -101,6 +119,7 @@ record Nice (G : Good) : Set where
   field
     Nε : ∀ ϕ → isEquiv _ _ (ε ϕ)
     Njoin : ∀ p ϕ → isEquiv _ _ (join p ϕ)
+    NΠ : ∀ p ϕ → isEquiv _ _  (Π p ϕ)
     NU : ∀ a ϕ → isEquiv _ _ (U a ϕ)
     NEl : ∀ a ϕ → isEquiv _ _ (El a ϕ)
 
@@ -118,6 +137,12 @@ nice-goodness-to-simple-eliminators G N ℓ P = record
       (λ ϕ g → PCon (pre.join a b , g))
       (λ { (good-a , good-b) → Pjoin (a , good-a) (ECon a good-a)
                                      (b , good-b) (ETy b (a , good-a) good-b) }) .snd (good-a , good-b) };
+    EΠ = λ { (Γ , good-Γ) (A , good-A) (B , good-B) → equiv-pullback-J
+      (λ ϕ → Π ((Γ , A) , B) ϕ , NΠ ((Γ , A) , B) ϕ)
+      (λ ϕ g → PTy ϕ (pre.Π Γ A B , g))
+      (λ { ((good-Γ , good-A) , good-B) → PΠ (Γ , good-Γ) (ECon Γ good-Γ)
+                                             (A , good-A) (ETy A _ good-A)
+                                             (B , good-B) (ETy B _ good-B) }) .snd ((good-Γ , good-A) , good-B) };
     EU = λ { (a , good-a) → equiv-pullback-J
       (λ ϕ → U a ϕ , NU a ϕ)
       (λ ϕ g → PTy ϕ (pre.U a , g))
@@ -145,6 +170,13 @@ nice-goodness-to-simple-eliminators G N ℓ P = record
     (λ ϕ g → PCon (pre.join a b , g))
     (λ { (good-a , good-b) → Pjoin (a , good-a) (ECon a good-a)
                                    (b , good-b) (ETy b (a , good-a) good-b) }) .fst ★
+  ETy (pre.Π Γ A B) ϕ =
+    equiv-pullback-J
+    (λ ϕ → Π ((Γ , A) , B) ϕ , NΠ ((Γ , A) , B) ϕ)
+    (λ ϕ g → PTy ϕ (pre.Π Γ A B , g))
+    (λ { ((good-Γ , good-A) , good-B) → PΠ (Γ , good-Γ) (ECon Γ good-Γ)
+                                           (A , good-A) (ETy A _ good-A)
+                                           (B , good-B) (ETy B _ good-B) }) .fst ϕ
   ETy (pre.U a) ϕ =
     equiv-pullback-J
     (λ ϕ → U a ϕ , NU a ϕ)
@@ -162,6 +194,7 @@ module succ (G : Good) where
     Ty : (a : pre.Ty) → (ϕ : Ix-Ty (G .Good.Con)) → Σ[ Y ∈ Set ] (Y → G .Good.Ty ϕ a)
     Con pre.ε ϕ = Arg-ε ϕ , G .Good.ε ϕ
     Con (pre.join a b) ϕ = Arg-join (G .Good.Con) (G .Good.Ty) (a , b) ϕ , G .Good.join (a , b) ϕ
+    Ty (pre.Π Γ A B) ϕ = Arg-Π (G .Good.Con) (G .Good.Ty) (G .Good.join) ((Γ , A) , B) ϕ , G .Good.Π ((Γ , A) , B) ϕ
     Ty (pre.U a) ϕ = Arg-U (G .Good.Con) a ϕ , G .Good.U a ϕ
     Ty (pre.El a) ϕ = Arg-El (G .Good.Con) (G .Good.Ty) (G .Good.join) (G .Good.U) a ϕ , G .Good.El a ϕ
 
@@ -181,6 +214,10 @@ module succ (G : Good) where
   πjoin : ∀ p ϕ → Arg-join newCon newTy p ϕ → Arg-join (G .Good.Con) (G .Good.Ty) p (πCon ϕ)
   πjoin (a , b) ϕ ((good-a , good-b) , p) = (E.Con a ★ .snd good-a , E.Ty b _ .snd good-b) , cong πCon p
 
+  πΠ : ∀ p ϕ → Arg-Π newCon newTy πjoin p ϕ → Arg-Π (G .Good.Con) (G .Good.Ty) (G .Good.join) p (πTy ϕ)
+  πΠ ((Γ , A) , B) ϕ (((good-Γ , good-A) , good-B) , p) =
+    ((E.Con Γ ★ .snd good-Γ , E.Ty A _ .snd good-A) , E.Ty B _ .snd good-B) , cong πTy p
+
   πU : ∀ a ϕ → Arg-U newCon a ϕ → Arg-U (G .Good.Con) a (πTy ϕ)
   πU a ϕ (good-a , p) = E.Con a ★ .snd good-a , cong πTy p
 
@@ -192,6 +229,7 @@ module succ (G : Good) where
   alg .Good.Ty = newTy
   alg .Good.ε = πε
   alg .Good.join = πjoin
+  alg .Good.Π = πΠ
   alg .Good.U = πU
   alg .Good.El = πEl
 
@@ -242,6 +280,14 @@ module limit (O : Good) where
     f = ≃ .fst
     isEq = ≃ .snd
 
+  module limit-Π (p : Σ[ _ ∈ Σ[ _ ∈ pre.Con ] pre.Ty ] pre.Ty) (ϕ : Ix-Ty limit-Con.t) where
+    ≃ : Arg-Π limit-Con.t limit-Ty.t limit-join.f p ϕ ≃ limit-Ty.t ϕ (pre.Π (p .fst .fst) (p .fst .snd) (p .snd))
+    ≃ = ≃-trans
+      (Σ-≃-CΣ (Σ-≃-CΣ (Σ-≃-CΣ ≃-refl λ _ → ≃-refl) λ _ → ≃-refl) λ _ → P-≃-CP λ i → Ix-≃-Ty)
+      (limit-Ty.st-≃-t ϕ (pre.Π (p .fst .fst) (p .fst .snd) (p .snd)))
+    f = ≃ .fst
+    isEq = ≃ .snd
+
   module limit-U (a : pre.Con) (ϕ : Ix-Ty limit-Con.t) where
     ≃ : Arg-U limit-Con.t a ϕ ≃ limit-Ty.t ϕ (pre.U a)
     ≃ = ≃-trans
@@ -263,12 +309,14 @@ module limit (O : Good) where
   L .Good.Ty = limit-Ty.t
   L .Good.ε = limit-ε.f
   L .Good.join = limit-join.f
+  L .Good.Π = limit-Π.f
   L .Good.U = limit-U.f
   L .Good.El = limit-El.f
 
   LN : Nice L
   LN .Nice.Nε = limit-ε.isEq
   LN .Nice.Njoin = limit-join.isEq
+  LN .Nice.NΠ = limit-Π.isEq
   LN .Nice.NU = limit-U.isEq
   LN .Nice.NEl = limit-El.isEq
 
