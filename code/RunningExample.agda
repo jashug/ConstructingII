@@ -72,7 +72,7 @@ module _ ℓX (X : Set ℓX) where
   Arg-η : X → Ix-A → Set ℓX
   Arg-η x ϕ = Σ[ _ ∈ ⊤ ] (★ ≡ ϕ)
   Arg-join : (goodA : Ix-A → pre.A → Set ℓX) → (goodB : Ix-B goodA → pre.B → Set ℓX) →
-             Σ[ a ∈ pre.A ] pre.B → Ix-A → Set ℓX
+             Σ[ _ ∈ pre.A ] pre.B → Ix-A → Set ℓX
   Arg-join goodA goodB (a , b) ϕ = Σ[ p ∈ Σ[ good-a ∈ goodA ★ a ] goodB (a , good-a) b ] (★ ≡ ϕ)
   Arg-inj : (goodA : Ix-A → pre.A → Set ℓX) → pre.A → Ix-B goodA → Set ℓX
   Arg-inj goodA a ϕ = Σ[ good-a ∈ goodA ★ a ] ((a , good-a) ≡ ϕ)
