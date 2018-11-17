@@ -1253,12 +1253,12 @@ In this paper, we have:
     \item Given an alternative construction of inductive-inductive types in cubical type theory, which is compatible with Homotopy Type Theory.
 \end{enumerate}
 
-We claim that the construction of our specific running example is straightforwardly generalizable to other inductive-inductive types, and have formalized the construction of a number of other examples including types with non-finitary constructors and indices to support this claim (see the GitHub repositiory referenced in the introduction).
+We claim that the construction of our specific running example is straightforwardly generalizable to other inductive-inductive types, and have formalized the construction of a number of other examples including types with non-finitary constructors and indices to support this claim (see the GitHub repository referenced in the introduction).
 
 Going forward, we would like to investigate
 \begin{itemize}
     \item An internal definition of inductive-inductive specifications in HoTT. Early experiments suggest that this requires surmounting difficulties related to increasingly complex coherence conditions similar to those encountered when defining semi-simplicial sets, c.f. \citet{simplicialsets}.
-    \item Extending the proof given here to construct the general elimination rules. The general elimination rules were defined in \citet{nordvallforsberg2013thesis}, but in that formulation they rely on extensional type theory to be well typed. \citet{KaposiKovacsHIITsyntax} give equivalent rules which are well typed in intensional type theory.
+    \item Extending the proof given here to construct the general elimination rules. The general elimination rules were defined in \citet{nordvallforsberg2013thesis}, but that formulation they relies on either strict computation rules or extensional type theory to be well typed. \citet{KaposiKovacsHIITsyntax} give equivalent rules which are well typed in intensional type theory.
     \item Identifying needs to be added for the simple elimination rules to have the expected computational behavior. Given the similar construction method, this hopefully also allows the construction of coinductive types with nice computational behavior, c.f. \citet{nonwellfoundedtrees}.
     \item In the opposite direction from the previous point, rewriting the construction given here in Coq + Function Extensionality. While the elimination rules will have poor computational behavior, this would make using inductive-inductive types in Coq possible without requiring any change to Coq itself, while being compatible with HoTT. In particular, using cubical type theory makes the proofs in \S\ref{ex-limit-alg} simpler, but we speculate that axiomatic function extensionality is sufficient.
 \end{itemize}

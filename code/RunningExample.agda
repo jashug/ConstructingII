@@ -142,6 +142,7 @@ module _ ℓX (X : Set ℓX) where
     open Nice N
     open Motives-Methods P
 
+    -- this is an application of the standard eliminator for the pre-syntax
     EA : (pre-a : pre.A) → (good-a : A ★ pre-a) → PA (pre-a , good-a)
     EB : (pre-b : pre.B) → (ϕ : Ix-B A) → (good-b : B ϕ pre-b) → PB ϕ (pre-b , good-b)
     EA (pre.η x) =
@@ -164,6 +165,7 @@ module _ ℓX (X : Set ℓX) where
   -- Section 3.4: successor goodness algebra
   module succ (G : Good) where
     module E where
+      -- this is an application of the standard eliminator for the pre-syntax
       A : (a : pre.A) → (ϕ : Ix-A) → Σ[ Y ∈ Set ℓX ] (Y → G .Good.A ϕ a)
       B : (b : pre.B) → (ϕ : Ix-B (G .Good.A)) → Σ[ Y ∈ Set ℓX ] (Y → G .Good.B ϕ b)
       A (pre.η x) ϕ = Arg-η x ϕ , G .Good.η x ϕ
