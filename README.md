@@ -11,6 +11,7 @@ We also formalize the construction in cubical type theory of a number of inducti
 * `RunningExample.agda`: The example used in the paper
 * `ConTy.agda`: The example with contexts and types from the introduction
 * `InfinitaryII.agda`: An example with infinitary constructors
+* `EvilII.agda` : This example has infinitary constructors and indices, and constructors in other constructors and sorts
 
 The code was checked using Coq 8.8.0 and Agda 2.6.0 commit bd338484d.
 
