@@ -15,3 +15,5 @@ We also formalize the construction in cubical type theory of a number of inducti
 
 The code was checked using Coq 8.8.0 and Agda 2.6.0 commit bd338484d.
 
+The tag `FoSSaCS2019` was refers to the code at the time of submission to FoSSaCS 2019.
+
