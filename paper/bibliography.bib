@@ -110,14 +110,6 @@ pages     = {259--287}
   author = "Per Martin-Löf"
 }
 
-@Book{hottbook,
-  author =    {The {Univalent Foundations Program}},
-  title =     {Homotopy Type Theory: Univalent Foundations of Mathematics},
-  publisher = {\url{https://homotopytypetheory.org/book}},
-  address =   {Institute for Advanced Study},
-  year =      {2013},
-}
-
 @InProceedings{finiteaxiomatizationIR,
   author="Dybjer, Peter
   and Setzer, Anton",
@@ -171,12 +163,15 @@ keywords = "big-step normalisation, typed syntax, type theory, Agda, explicit su
   publisher={Taylor \& Francis}
 }
 
-@article{Altenkirch2016QuotientIT,
-  title={Quotient inductive-inductive types},
-  author={Thorsten Altenkirch and Paolo Capriotti and Gabe Dijkstra and Fredrik Nordvall Forsberg},
-  journal={CoRR},
-  year={2016},
-  volume={abs/1612.02346}
+@InProceedings{Altenkirch2018QuotientITsemantics,
+  author="Altenkirch, Thorsten and Capriotti, Paolo and Dijkstra, Gabe and Kraus, Nicolai and Nordvall Forsberg, Fredrik",
+  editor="Baier, Christel and Dal Lago, Ugo",
+  title="Quotient Inductive-Inductive Types",
+  booktitle="Foundations of Software Science and Computation Structures, FoSSaCS",
+  year="2018",
+  publisher="Springer International Publishing",
+  pages="293--310",
+  isbn="978-3-319-89366-2"
 }
 
 @InProceedings{KaposiKovacsHIITsyntax,
@@ -198,19 +193,11 @@ keywords = "big-step normalisation, typed syntax, type theory, Agda, explicit su
   annote =	{Keywords: homotopy type theory, inductive-inductive types, higher inductive types, quotient inductive types, logical relations}
 }
 
-@InProceedings{AltenkirchKaposiKovacsConstructingQIITs,
-  author = {Thorsten Altenkirch and Ambrus Kaposi and Andr{\'a}s Kov{\'a}cs},
-  title = {{Constructing Quotient Inductive-Inductive Types}},
-  booktitle = {POPL},
-  journal = {POPL},
-  year = {2019}
-}
-
-@article{nonwellfoundedtrees,
-  author = {Ahrens, Benedikt and Capriotti, Paolo and Spadotti, Régis},
-  year = {2015},
-  month = {04},
-  title = {Non-wellfounded trees in Homotopy Type Theory}
+@inproceedings{nonwellfoundedtrees,
+  title={Non-Wellfounded Trees in Homotopy Type Theory},
+  author={Benedikt Ahrens and Paolo Capriotti and R{\'e}gis Spadotti},
+  booktitle={TLCA},
+  year={2015}
 }
 
 @article{cubicaltt_ifcolog,
@@ -293,7 +280,7 @@ author = "Frank Pfenning"
 
 @misc{Coq880,
   author       = {The {Coq Development Team}},
-  title        = {The Coq Proof Assistant, version 8.8.0},
+  title        = {The {C}oq Proof Assistant, version 8.8.0},
   month        = apr,
   year         = {2018},
   doi          = {10.5281/zenodo.1219885},
@@ -306,4 +293,41 @@ author = "Frank Pfenning"
   year = {2017},
   organization={HoTT/UF},
   url = {https://hott-uf.github.io/2017/abstracts/cubicalagda.pdf}
+}
+
+@Book{hottbook,
+  author =    {The {Univalent Foundations Program}},
+  title =     {Homotopy Type Theory: Univalent Foundations of Mathematics},
+  publisher = {\url{https://homotopytypetheory.org/book}},
+  address =   {Institute for Advanced Study},
+  year =      {2013}
+}
+
+@article{constructing-ii-cubical,
+  title = "Constructing Inductive-Inductive Types in Cubical Type Theory",
+  author = "Jasper Hugunin",
+  year = {2019},
+  journal = {Submitted: FoSSaCS},
+  url = {https://jashug.github.io/papers/ConstructingII.pdf}
+}
+
+@article{AltenkirchKaposiKovacsConstructingQIITs,
+ author = {Thorsten Altenkirch and Ambrus Kaposi and Andr{\'a}s Kov{\'a}cs},
+ title = {Constructing Quotient Inductive-inductive Types},
+ journal = {Proc. ACM Program. Lang.},
+ issue_date = {January 2019},
+ volume = {3},
+ number = {POPL},
+ month = jan,
+ year = {2019},
+ issn = {2475-1421},
+ pages = {2:1--2:24},
+ articleno = {2},
+ numpages = {24},
+ url = {http://doi.acm.org/10.1145/3290315},
+ doi = {10.1145/3290315},
+ acmid = {3290315},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {category with families, generalised algebraic theory, higher inductive types, homotopy type theory, inductive-inductive types, logical relations, quotient inductive types},
 }
