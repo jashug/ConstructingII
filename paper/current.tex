@@ -22,6 +22,7 @@
 \usepackage{float}
 \floatstyle{boxed} 
 \restylefloat{figure}
+\usepackage{hyperref}
 
 %\allowdisplaybreaks
 
@@ -82,7 +83,7 @@
 \newcommand{\II}{\mathbb{I}}
 \newcommand{\bbO}{\mathbb{O}}
 \newcommand{\tac}{\vdash}
-\newcommand{\join}{\texttt{join}}
+\newcommand{\join}{\texttt{ext}}
 \newcommand{\inj}{\texttt{inj}}
 \newcommand{\refl}{\texttt{refl}}
 \def\Forsberg/{Nordvall Forsberg}
@@ -95,7 +96,7 @@
 
 \author{Jasper Hugunin}
 \institute{University of Washington, Seattle WA, USA\\
-    \email{jasperh@cs.washington.edu} \Letter
+    \email{jasperh@cs.washington.edu} \Letter \quad \url{https://orcid.org/0000-0002-1133-5354}
     }
 
 \maketitle
@@ -108,7 +109,7 @@ Inductive-inductive types are a joint generalization of mutual inductive types a
     
 Inductive-inductive types allow for the mutual inductive definition of a type and a family over that type. As an example,
 %writing $(x : X) \to Y$ for dependent product and $\USet$ for a universe,
-we can simultaneously define contexts and types defined in a context:
+we can simultaneously define contexts and types defined in a context, with dependently typed context extension:
 \begin{align*}
 \text{Ctx} &: \USet,\qquad
 &\text{Ty} &: \text{Ctx} \to \USet,\\
@@ -165,8 +166,9 @@ Here the $\eta$ rules express that $(A, \leq)$ is a sub-relation of $(A^*, \leq^
 For the purposes of this paper, we will focus on one relatively simple inductive-inductive definition (with only 5 clauses), parametrized by a type $X$, which is given in Figure \ref{example-definition}.
 We will use this definition to prove that \Forsberg/'s construction implies UIP in \S\ref{derivingUIP} and as a running example to demonstrate our construction in cubical type theory in \S\ref{example-construct-cubical}.
 
-Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s, and $\eta$ gives us something to start with: one element of $A$ for each element of $X$.
-Our proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
+Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s\erase{ (mirroring the type of context extension)}, and $\eta$ gives us something to start with: one element of $A$ for each element of $X$\erase{ (following the use of $\eta$ in \citep[Example 3.3]{nordvallforsberg2013thesis})}.
+
+The proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
 
 \begin{figure}[htpb]
     \begin{flushleft}
@@ -340,7 +342,7 @@ Therefore \Forsberg/'s approach to constructing inductive-inductive types requir
 
 Cubical type theory \citep{cubicaltt_ifcolog} is a recently developed type theory which gives a constructive interpretation of the Univalence axiom of Homotopy Type Theory. It has an implementation as a mode for Agda \citep{AddingCubesToAgda}, which we use to formalize the construction given in this section of the running example from Figure \ref{example-definition}.
 
-The most important difference between cubical type theory and standard intensional type theory as implemented by Coq or vanilla Agda is that the identity type $\IdA{x}{y}{X}$ is represented (loosely speaking) by the type of functions $p$ from an interval type $\II$ with two endpoints $i_0$ and $i_1$ to $X$ such that $p\;i_0$ reduces to $x$ and $p\;i_1$ reduces to $y$. This allows, for example, a trivial proof of function extensionality: if we have $A : \USet$, $B : A\to \USet$, $f$ and $g$ functions of type $(a : A) \to B\;a$, and $h : (a : A) \to \Id{f\;a}{g\;a}$, then we have $(\lambda i.\lambda a.h\;a\;i) : \Id{f}{g}$. Taking $\text{cong}\; f = \lambda p. \lambda i. f\; (p\;i) : \Id{x}{y} \to \Id{f\;x}{f\;y}$ and $\circ$ for function composition, we also have nice properties such as $(\text{cong}\; f) \circ (\text{cong}\; g) = \text{cong}\; (f \circ g)$.
+The most important difference between cubical type theory and standard intensional type theory as implemented by Coq or vanilla Agda is that the identity type $\IdA{x}{y}{X}$ is represented (loosely speaking) by the type of functions $p$ from an interval type $\II$ with two endpoints $i_0$ and $i_1$ to $X$ such that $p\;i_0$ reduces to $x$ and $p\;i_1$ reduces to $y$. This allows, for example, a simple proof of function extensionality: if we have $A : \USet$, $B : A\to \USet$, $f$ and $g$ functions of type $(a : A) \to B\;a$, and $h : (a : A) \to \Id{f\;a}{g\;a}$, then we have $(\lambda i.\lambda a.h\;a\;i) : \Id{f}{g}$. Taking $\text{cong}\; f = \lambda p. \lambda i. f\; (p\;i) : \Id{x}{y} \to \Id{f\;x}{f\;y}$ and $\circ$ for function composition, we also have nice properties such as $(\text{cong}\; f) \circ (\text{cong}\; g) = \text{cong}\; (f \circ g)$.
 
 In this section, we construct the running example from Figure \ref{example-definition}, along with the simple elimination rules, in cubical type theory. Our construction proceeds in several steps:
 \begin{itemize}
@@ -701,7 +703,7 @@ Given $(a, b) : \pre{A} \times \pre{B}$ and $\phi : \Ix A\;L$, we let $\phi' = \
 \simeq\\
 \text{chain.t}\;(\lambda n.\lambda i.\Arg\join\;(S^n\;\bbO)\;(a,b)\;(\phi'.p\;n\;i))\;(\lambda n.(\delta^\pi\;(S^{n+1}\;\bbO)).\eta\;(a,b)\;(\phi'.p\;(1+n)\;i_0))
 \end{gather*}
-using the lemmas from \S\ref{ex-chain}. We then compose with $t_\simeq.A\;\phi\;(\pre{\join}\;a\;b)$, which is possible because of the same argument about computation in $E$ as from $\eta$, yielding \[(L.\join, L^n.\join) : \Arg\join\;L\;(a,b)\;\phi \simeq L.A\;\phi\;(\pre{join}\;a\;b).\]
+using the lemmas from \S\ref{ex-chain}. We then compose with $t_\simeq.A\;\phi\;(\pre{\join}\;a\;b)$, which is possible because of the same argument about computation in $E$ as from $\eta$, yielding \[(L.\join, L^n.\join) : \Arg\join\;L\;(a,b)\;\phi \simeq L.A\;\phi\;(\pre{\join}\;a\;b).\]
 \end{subsubsection}
 
 \begin{subsubsection}{Defining $L.\inj$}
@@ -952,7 +954,7 @@ In short, we use the eliminator component-wise.
 Then, given $\delta^{M_2} : \Delta^{M_2}\;\delta\;\delta^{M_1}$, we define the type $\Delta^{E_2}\;\delta\;\delta^{M_1}\;\delta^{M_2}\;\delta^{E_1}$ of the (propositional) equations to be tuples of equalities \[\delta^{E_2}.F\;x\;a : \Id{\delta^{E_1}.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle)\;(\delta.F\;x\;a)}{\delta^{M_2}.F\;x\;a\;(A^{E_2}\;\emptytuple\;a)}\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in\Delta$ expressing that the eliminator $\delta^{E_1}.B$ applied to the constructor $\delta.F\;x\;a$ is equal to using the provided induction step $\delta^{M_2}.F$ with the induction hypothesis $A^{E_2}\;\emptytuple\;a$ given by the eliminator.
 \end{definition}
 
-For join, this definition comes out to the type \[E\join\;(a, b) : \IdA{EA\;(\join\;a\;b)}{P\join\;(a,b)\;(EA\;a, EB\;a\;b)}{PA\;(\join\;a\;b)}.\] The sub-term $(EA\;a, EB\;a\;b)$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{E_2}\;\emptytuple\;(a, b)$, witnessing that the induction hypothesis $(PA\;a \times PB\;a\;b)$ for $P\join$ is satisfied. For $\inj$, we have \[E\inj\;a : \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.\]
+For $\join$, this definition comes out to the type \[E\join\;(a, b) : \IdA{EA\;(\join\;a\;b)}{P\join\;(a,b)\;(EA\;a, EB\;a\;b)}{PA\;(\join\;a\;b)}.\] The sub-term $(EA\;a, EB\;a\;b)$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{E_2}\;\emptytuple\;(a, b)$, witnessing that the induction hypothesis $(PA\;a \times PB\;a\;b)$ for $P\join$ is satisfied. For $\inj$, we have \[E\inj\;a : \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.\]
 
 This concludes the definition of the simple elimination rules we will use. Going back to our running example, applying the $-^M$, and $-^E$ translations to the specification in Figure \ref{example-code} gives the second and third sets of types in Figure \ref{example-definition}.
 
@@ -1259,7 +1261,7 @@ Going forward, we would like to investigate
 \begin{itemize}
     \item An internal definition of inductive-inductive specifications in HoTT. Early experiments suggest that this requires surmounting difficulties related to increasingly complex coherence conditions similar to those encountered when defining semi-simplicial sets, c.f. \citet{simplicialsets}.
     \item Extending the proof given here to construct the general elimination rules. The general elimination rules were defined in \citet{nordvallforsberg2013thesis}, but that formulation they relies on either strict computation rules or extensional type theory to be well typed. \citet{KaposiKovacsHIITsyntax} give equivalent rules which are well typed in intensional type theory.
-    \item Identifying needs to be added for the simple elimination rules to have the expected computational behavior. Given the similar construction method, this hopefully also allows the construction of coinductive types with nice computational behavior, c.f. \citet{nonwellfoundedtrees}.
+    \item Identifying what needs to be added for the simple elimination rules to have the expected computational behavior. Given the similar construction method, this hopefully also allows the construction of coinductive types with nice computational behavior, c.f. \citet{nonwellfoundedtrees}.
     \item In the opposite direction from the previous point, rewriting the construction given here in Coq + Function Extensionality. While the elimination rules will have poor computational behavior, this would make using inductive-inductive types in Coq possible without requiring any change to Coq itself, while being compatible with HoTT. In particular, using cubical type theory makes the proofs in \S\ref{ex-limit-alg} simpler, but we speculate that axiomatic function extensionality is sufficient.
 \end{itemize}
 
