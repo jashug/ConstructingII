@@ -96,7 +96,7 @@
 
 \author{Jasper Hugunin}
 \institute{University of Washington, Seattle WA, USA\\
-    \email{jasperh@cs.washington.edu} \Letter \quad \url{https://orcid.org/0000-0002-1133-5354}
+    \email{jasper@hugunin.net} \Letter \quad \url{https://orcid.org/0000-0002-1133-5354}
     }
 
 \maketitle
@@ -308,7 +308,7 @@ Now we prove that there are at least as many proofs of $B\;(\pre{t},\good{t})$ a
 \begin{proof}
     Referring to the simple elimination rules given in Figure \ref{example-definition}, we pattern match on $B$ by giving motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$, and then using the resulting $EB$.
     
-    We set $PA\;a = \top$, $P\eta\;x = \star$, and $P\join\;a\;\star\;b\;IH = \star$.
+    We set $PA\;a = \top$, $P\eta\;x = \star$, and $P\join\;a\;\star\;b\;H = \star$.
     Then we can take $PB\;a\;b$ to be $\IdA{\inj\;a}{b}{B\;a}$, at which point $P\inj\; a\;\star : \IdA{\inj\;a}{\inj\;a}{B\;a}$ holds by reflexivity. The conclusion follows by $EB : (a : A) \to (b : B\;a) \to \IdA{\inj\;a}{b}{B\;a}$.
 \end{proof}
 
@@ -1268,13 +1268,13 @@ Going forward, we would like to investigate
 \end{section}
 
 %% Acknowledgments
-\begin{section}{Acknowledgements}
+\begin{subsubsection}{Acknowledgements}
 
 I would like to thank Talia Ringer and Dan Grossman from the UW PLSE lab, for their invaluable feedback throughout the revision process. I also thank Pavel Panchekha, John Leo, Remy Wang, and Fredrik \Forsberg/ for their comments.
 
 Some of this work was completed while studying at Tokyo Institute of Technology under Professor Ryo Kashima. I would like to thank Professor Kashima, as well as my fellow lab members and mentors Asami and Maniwa for making my stay both productive and enjoyable.
 
-\end{section}
+\end{subsubsection}
 
 
 %% Bibliography
