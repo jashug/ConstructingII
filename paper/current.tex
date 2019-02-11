@@ -86,6 +86,10 @@
 \newcommand{\join}{\texttt{ext}}
 \newcommand{\inj}{\texttt{inj}}
 \newcommand{\refl}{\texttt{refl}}
+\newcommand{\PA}{\mathit{PA}}
+\newcommand{\PB}{\mathit{PB}}
+\newcommand{\EA}{\mathit{EA}}
+\newcommand{\EB}{\mathit{EB}}
 \def\Forsberg/{Nordvall Forsberg}
 \def\emptytuple{\langle\rangle}
 
@@ -180,21 +184,21 @@ The proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\j
         \join &: (a : A) \to B\;a \to A,\\
         \inj &: (a : A) \to B\;a.\\[-.3in]
         \end{align*}
-        This has simple elimination rules stating that for all motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$\vspace{-.1in}
+        This has simple elimination rules stating that for all motives $(\PA, \PB)$ and methods $(P\eta, P\join, P\inj)$\vspace{-.1in}
         \begin{align*}
-        PA :&\; A \to \USet,\\
-        PB :&\; (a : A) \to B\;a\to \USet,\\
-        P\eta :&\; (x : X) \to PA\;(\eta\;x),\\
-        P\join :&\; (a : A) \to PA\;a\to (b : B\;a) \to PB\;a\;b \to PA\;(\join\;a\;b),\\
-        P\inj :&\; (a : A) \to PA\;a\to PB\;a\;(\inj\;a),\\[-.3in]
+        \PA :&\; A \to \USet,\\
+        \PB :&\; (a : A) \to B\;a\to \USet,\\
+        P\eta :&\; (x : X) \to \PA\;(\eta\;x),\\
+        P\join :&\; (a : A) \to \PA\;a\to (b : B\;a) \to \PB\;a\;b \to \PA\;(\join\;a\;b),\\
+        P\inj :&\; (a : A) \to \PA\;a\to \PB\;a\;(\inj\;a),\\[-.3in]
         \end{align*}
-        we have eliminators $(EA, EB)$ satisfying equalities $(E\eta, E\join, E\inj)$.\vspace{-.1in}
+        we have eliminators $(\EA, \EB)$ satisfying equalities $(E\eta, E\join, E\inj)$.\vspace{-.1in}
         \begin{align*}
-        EA :&\; (a : A) \to PA\;a,\\
-        EB :&\; (a : A) \to (b : B\;a) \to PB\;a\;b,\\
-        E\eta :&\; (x : X) \to \IdA{EA\;(\eta\;x)}{P\eta\;x}{PA\;(\eta\;x)},\\
-        E\join :&\; (a : A) \to (b : B\;a) \to\\&\; \IdA{EA\;(\join\;a\;b)}{P\join\;a\;(EA\;a)\;b\;(EB\;a\;b)}{PA\;(\join\;a\;b)},\\
-        E\inj :&\; (a : A) \to \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.\\[-.3in]
+        \EA :&\; (a : A) \to \PA\;a,\\
+        \EB :&\; (a : A) \to (b : B\;a) \to \PB\;a\;b,\\
+        E\eta :&\; (x : X) \to \IdA{\EA\;(\eta\;x)}{P\eta\;x}{\PA\;(\eta\;x)},\\
+        E\join :&\; (a : A) \to (b : B\;a) \to\\&\; \IdA{\EA\;(\join\;a\;b)}{P\join\;a\;(\EA\;a)\;b\;(\EB\;a\;b)}{\PA\;(\join\;a\;b)},\\
+        E\inj :&\; (a : A) \to \IdA{\EB\;a\;(\inj\;a)}{P\inj\;a\;(\EA\;a)}{\PB\;a\;(\inj\;a)}.\\[-.3in]
         \end{align*}
     \end{flushleft}
     
@@ -306,10 +310,9 @@ Now we prove that there are at least as many proofs of $B\;(\pre{t},\good{t})$ a
     Assuming the simple elimination rules from Figure \ref{example-definition} hold for the $(A, B, \eta, \inj, \join)$ constructed above, for all $a : A$ and $b : B\;a$, $\IdA{\inj\;a}{b}{B\;a}$
 \end{lemma}
 \begin{proof}
-    Referring to the simple elimination rules given in Figure \ref{example-definition}, we pattern match on $B$ by giving motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$, and then using the resulting $EB$.
+    Referring to the simple elimination rules given in Figure \ref{example-definition}, we pattern match on $B$ by giving motives $(\PA, \PB)$ and methods $(P\eta, P\join, P\inj)$, and then using the resulting $\EB$.
     
-    We set $PA\;a = \top$, $P\eta\;x = \star$, and $P\join\;a\;\star\;b\;H = \star$.
-    Then we can take $PB\;a\;b$ to be $\IdA{\inj\;a}{b}{B\;a}$, at which point $P\inj\; a\;\star : \IdA{\inj\;a}{\inj\;a}{B\;a}$ holds by reflexivity. The conclusion follows by $EB : (a : A) \to (b : B\;a) \to \IdA{\inj\;a}{b}{B\;a}$.
+    We set $\PA\;a = \top$, and take $\PB\;a\;b = \IdA{\inj\;a}{b}{B\;a}$. Then we have $P\eta\;x = \star$, and $P\join\;a\;\star\;b\;H = \star$, and we take $P\inj\;a\;\star = \refl : \IdA{\inj\;a}{\inj\;a}{B\;a}$. The conclusion follows by $\EB : (a : A) \to (b : B\;a) \to \IdA{\inj\;a}{b}{B\;a}$.
 \end{proof}
 
 \begin{lemma}[\label{uniq-good-from-simple-elim}Simple elimination rules only if unique goodness]
@@ -466,30 +469,30 @@ However, the dependence of $\delta^G.B$ on $\delta^G.A$ makes this what \Forsber
 The proof is formalized in \texttt{RunningExample.agda}. The main idea of the proof is to induct on the pre-syntax, and exploit the equivalences provided by niceness $\delta^N$. In the $\inj$ case for example, we have a proof of $\delta^G.B\;\phi\;(\pre{\inj}\;a)$. But without loss of generality, we can replace that goodness proof with $\delta^G.\inj$ applied to an element of $\Arg\inj\;a\;\phi$, which contains both a proof $\good{a} : \delta^G.A\;\star\;a$ and a proof that $\Id{(a, \good{a})}{\phi}$. Using $J$ to eliminate that equality leaves a goal to which the provided simple induction step for $\inj$ applies. This proof does not use cubical type theory in any essential way.
 
 \erase{
-Assume motives $(PA, PB)$ and methods $(P\eta, P\join, P\inj)$
+Assume motives $(\PA, \PB)$ and methods $(P\eta, P\join, P\inj)$
 \begin{align*}
-PA :&\; A \to \USet,\\
-PB :&\; (a : A) \to B\;a\to \USet,\\
-P\eta :&\; (x : X) \to PA\;(\eta\;x),\\
-P\join :&\; (a : A) \to PA\;a\to (b : B\;a) \to PB\;a\;b \to PA\;(\join\;a\;b),\\
-P\inj :&\; (a : A) \to PA\;a\to PB\;a\;(\inj\;a).
+\PA :&\; A \to \USet,\\
+\PB :&\; (a : A) \to B\;a\to \USet,\\
+P\eta :&\; (x : X) \to \PA\;(\eta\;x),\\
+P\join :&\; (a : A) \to \PA\;a\to (b : B\;a) \to \PB\;a\;b \to \PA\;(\join\;a\;b),\\
+P\inj :&\; (a : A) \to \PA\;a\to \PB\;a\;(\inj\;a).
 \end{align*}
-We need to produce eliminators $(EA, EB)$ satisfying equalities $(E\eta, E\join, E\inj)$.
+We need to produce eliminators $(\EA, \EB)$ satisfying equalities $(E\eta, E\join, E\inj)$.
 \begin{align*}
-EA :&\; (a : A) \to PA\;a,\\
-EB :&\; (a : A) \to (b : B\;a) \to PB\;a\;b,\\
-E\eta :&\; (x : X) \to \IdA{EA\;(\eta\;x)}{P\eta\;x}{PA\;(\eta\;x)},\\
-E\join :&\; (a : A) \to (b : B\;a) \to \IdA{EA\;(\join\;a\;b)}{P\join\;a\;(EA\;a)\;b\;(EB\;a\;b)}{PA\;(\join\;a\;b)},\\
-E\inj :&\; (a : A) \to \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.
+\EA :&\; (a : A) \to \PA\;a,\\
+\EB :&\; (a : A) \to (b : B\;a) \to \PB\;a\;b,\\
+E\eta :&\; (x : X) \to \IdA{\EA\;(\eta\;x)}{P\eta\;x}{\PA\;(\eta\;x)},\\
+E\join :&\; (a : A) \to (b : B\;a) \to \IdA{\EA\;(\join\;a\;b)}{P\join\;a\;(\EA\;a)\;b\;(\EB\;a\;b)}{\PA\;(\join\;a\;b)},\\
+E\inj :&\; (a : A) \to \IdA{\EB\;a\;(\inj\;a)}{P\inj\;a\;(\EA\;a)}{\PB\;a\;(\inj\;a)}.
 \end{align*}
 Keep in mind the definitions in Figure \ref{example-goodness-algebra-def}.
-Since we have defined \[A = (a : \pre{A}) \times \delta^G.A\;\star\;a,\qquad B\;\phi = (b : \pre{B})\times\delta^G\;\phi\;b,\] up to currying it is sufficient to define \[EA : (\pre{a} : \pre{A}) \to (\good{a} : \delta^G.A\;\star\;\pre{a}) \to PA\;(\pre{a}, \good{a}),\]\[EB : (\pre{b} : \pre{B}) \to (\phi : A) \to (\good{b} : \delta^G.B\;\phi\;(\pre{b}, \good{b})) \to PB\;\phi\;(\pre{b}, \good{b}),\] and we will do so by induction on the pre-syntax.
+Since we have defined \[A = (a : \pre{A}) \times \delta^G.A\;\star\;a,\qquad B\;\phi = (b : \pre{B})\times\delta^G\;\phi\;b,\] up to currying it is sufficient to define \[\EA : (\pre{a} : \pre{A}) \to (\good{a} : \delta^G.A\;\star\;\pre{a}) \to \PA\;(\pre{a}, \good{a}),\]\[\EB : (\pre{b} : \pre{B}) \to (\phi : A) \to (\good{b} : \delta^G.B\;\phi\;(\pre{b}, \good{b})) \to \PB\;\phi\;(\pre{b}, \good{b}),\] and we will do so by induction on the pre-syntax.
 \begin{itemize}
-\item When $\pre{a} = \pre{\eta}\;x$, we can let $\phi = \star$ and apply Lemma \ref{equiv-pullback} with $\delta^N.\eta\;x\;\phi$ to only consider \[\good{a} = \delta^G.\eta\;x\;\phi\;(\star, p),\quad\text{ for some }\quad(\star, p) : \Arg\eta\;x\;\phi = \top \times \Id{\star}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = (\star, \refl)$, and we have to prove \[PA\;(\pre{\eta}\;x, \delta^G.\eta\;x\;\star\;(\star, \refl)) = PA\;(\eta\;x),\] which we can do with $P\eta\;x$.
-\item When $\pre{a} = \pre{\join}\;a\;b$, we can let $\phi = \star$ and apply Lemma \ref{equiv-pullback} with $\delta^N.\join\;(a, b)\;\phi$ to only consider \[\good{a} = \delta^G.\join\;(a,b)\;\phi\;((\good{a}, \good{b}), p),\quad\text{ for some }\]\[((\good{a}, \good{b}), p) : \Arg\join\;(a, b)\;\phi = ((\good{a} : \delta^G.A\;\star\;a) \times \delta^G.B\;(a, \good{a})\;b) \times \Id{\star}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = (\star, \refl)$, and we have to prove \[PA\;(\pre{\join}\;a\;b, \delta^G.\join\;(a, b)\;\star\;((\good{a}, \good{b}),\refl) = PA\;(\join\;(a, \good{a})\;(b, \good{b})).\] As long as we can prove the induction hypotheses $PA\;(a, \good{a})$ and $PB\;(a, \good{a})\;(b, \good{b})$, we can use $P\join$ to do so. And since $a$ and $b$ are sub-terms of $\pre{\join}\;a\;b$, we can use $EA\;a\;\good{a}$ and $EB\;b\;(a, \good{a})\;\good{b}$ to satisfy the induction hypotheses.
-\item When $\pre{b} = \pre{\inj}$, given $\phi$, we can apply Lemma \ref{equiv-pullback} with $\delta^N.\inj\;a\;\phi$ to only consider \[\good{b} = \delta^G.\inj\;a\;\phi\;(\good{a}, p)\quad\text{for some}\]\[(\good{a}, \phi) : \Arg\inj\;a\;\phi = (\good{a} : \delta^G.A\;\star\;a) \times \Id{(a, \good{a})}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = ((a, \good{a}), \refl)$, and we have to prove \[PB\;(a, \good{a})\;(\pre{\inj}\;a, \delta^G.\inj\;a\;(a, \good{a})\;(\good{a}, \refl)) = PB\;(a, \good{a})\;(\inj\;(a, \good{a})).\] As long as we can prove the induction hypothesis $PA\;(a, \good{a})$, we can use $P\inj$ to do so. And since $a$ is a sub-term of $\pre{\inj}\;a$, we can use $EA\;a\;\good{a}$ to satisfy the induction hypothesis.
+\item When $\pre{a} = \pre{\eta}\;x$, we can let $\phi = \star$ and apply Lemma \ref{equiv-pullback} with $\delta^N.\eta\;x\;\phi$ to only consider \[\good{a} = \delta^G.\eta\;x\;\phi\;(\star, p),\quad\text{ for some }\quad(\star, p) : \Arg\eta\;x\;\phi = \top \times \Id{\star}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = (\star, \refl)$, and we have to prove \[\PA\;(\pre{\eta}\;x, \delta^G.\eta\;x\;\star\;(\star, \refl)) = \PA\;(\eta\;x),\] which we can do with $P\eta\;x$.
+\item When $\pre{a} = \pre{\join}\;a\;b$, we can let $\phi = \star$ and apply Lemma \ref{equiv-pullback} with $\delta^N.\join\;(a, b)\;\phi$ to only consider \[\good{a} = \delta^G.\join\;(a,b)\;\phi\;((\good{a}, \good{b}), p),\quad\text{ for some }\]\[((\good{a}, \good{b}), p) : \Arg\join\;(a, b)\;\phi = ((\good{a} : \delta^G.A\;\star\;a) \times \delta^G.B\;(a, \good{a})\;b) \times \Id{\star}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = (\star, \refl)$, and we have to prove \[\PA\;(\pre{\join}\;a\;b, \delta^G.\join\;(a, b)\;\star\;((\good{a}, \good{b}),\refl) = \PA\;(\join\;(a, \good{a})\;(b, \good{b})).\] As long as we can prove the induction hypotheses $\PA\;(a, \good{a})$ and $\PB\;(a, \good{a})\;(b, \good{b})$, we can use $P\join$ to do so. And since $a$ and $b$ are sub-terms of $\pre{\join}\;a\;b$, we can use $\EA\;a\;\good{a}$ and $\EB\;b\;(a, \good{a})\;\good{b}$ to satisfy the induction hypotheses.
+\item When $\pre{b} = \pre{\inj}$, given $\phi$, we can apply Lemma \ref{equiv-pullback} with $\delta^N.\inj\;a\;\phi$ to only consider \[\good{b} = \delta^G.\inj\;a\;\phi\;(\good{a}, p)\quad\text{for some}\]\[(\good{a}, \phi) : \Arg\inj\;a\;\phi = (\good{a} : \delta^G.A\;\star\;a) \times \Id{(a, \good{a})}{\phi}.\] Applying $J$, we can without loss of generality only consider $(\phi, p) = ((a, \good{a}), \refl)$, and we have to prove \[\PB\;(a, \good{a})\;(\pre{\inj}\;a, \delta^G.\inj\;a\;(a, \good{a})\;(\good{a}, \refl)) = \PB\;(a, \good{a})\;(\inj\;(a, \good{a})).\] As long as we can prove the induction hypothesis $\PA\;(a, \good{a})$, we can use $P\inj$ to do so. And since $a$ is a sub-term of $\pre{\inj}\;a$, we can use $\EA\;a\;\good{a}$ to satisfy the induction hypothesis.
 \end{itemize}
-This completes the definition of $EA$ and $EB$. They satisfy the equalities $E\eta$, $E\join$, and $E\inj$, though not by computation, because we are pulling back over an equality when we start at a point in the image, and apply $J$ to $\refl$. Therefore a nice goodness algebra gives the simple elimination rules.
+This completes the definition of $\EA$ and $\EB$. They satisfy the equalities $E\eta$, $E\join$, and $E\inj$, though not by computation, because we are pulling back over an equality when we start at a point in the image, and apply $J$ to $\refl$. Therefore a nice goodness algebra gives the simple elimination rules.
 }
 
 \end{proof}
@@ -570,8 +573,8 @@ We will now construct a nice goodness algebra by taking the limit of the sequenc
     \begin{gather*}A : \N\to \USet\qquad\text{with}\qquad f_A : (n : \N) \to A\;(1+n) \to A\;n\qquad \text{and}\\B : (n : \N) \to A\;n \to \USet\qquad\text{with}\\f_B : (n : \N) \to (a : A\;(1+n)) \to B\;(1+n)\;a \to B\;n\;(f_A\;n\;a),\end{gather*}
     we can form
     \begin{align*}
-    LA &= \text{chain.t}\;(\lambda n.\lambda i. A\;n)\;f_A &:& \USet,\\
-    LB &= \lambda a.\text{chain.t}(\lambda n.\text{cong}(B\;n)(a.p\;n))(\lambda n. f_B\;n\;(a.p\;(1+n)\;i_0)) &:& LA \to \USet
+    \mathit{LA} &= \text{chain.t}\;(\lambda n.\lambda i. A\;n)\;f_A &:& \USet,\\
+    \mathit{LB} &= \lambda a.\text{chain.t}(\lambda n.\text{cong}(B\;n)(a.p\;n))(\lambda n. f_B\;n\;(a.p\;(1+n)\;i_0)) &:& \mathit{LA} \to \USet
     \end{align*}
     using $\text{cong}(B\;n)(a.p\;n)$ which is particularly well behaved in cubical type theory.
     
@@ -914,7 +917,7 @@ The \emph{motives} $-^{M_1}$ (Def. \ref{M1-translation}) consist of predicates o
 Given an inductive-inductive specification $\Delta$ and an object $\delta : \Delta^C$, we define the type of motives $\Delta^{M_1}\;\delta$ to be tuples of predicates \[\delta^{M_1}.T\;x\;a : \delta.T\;x\;a \to \USet\] for all sorts $T : \Pi(x : X).A \to \UU \in \Delta$.
 \end{definition}
 
-Comparing this to the example in Figure \ref{example-definition}, the sort specification $A : \Pi(\star : \top).\top \to \UU$, for which we have type $\delta.A : \top \to \top \to \USet$, gets mapped to the type of predicates $\delta^{M_1}.A : \top \to \top \to \delta.A\;\star\;\star \to \USet$, or dropping $\top$ arguments to $PA : A \to \USet$. Likewise, the sort specification $B : \Pi(\star : \top).A\;\star\;\star \to \UU$, for which we have type $\delta.B : \top \to \delta.A\;\star\;\star \to \USet$ gets mapped to the type of predicates $\delta^{M_1}.B : \top \to (a : \delta.A\;\star\;\star) \to \delta.B\;\star\;a \to \USet$, and dropping $\top$ arguments gives $PB : (a : A) \to B\;a \to \USet$. The motives of the simple elimination rules are thus pairs of \[PA : A \to \USet\qquad\text{ and }\qquad PB : (a : A) \to B\;a \to \USet.\]
+Comparing this to the example in Figure \ref{example-definition}, the sort specification $A : \Pi(\star : \top).\top \to \UU$, for which we have type $\delta.A : \top \to \top \to \USet$, gets mapped to the type of predicates $\delta^{M_1}.A : \top \to \top \to \delta.A\;\star\;\star \to \USet$, or dropping $\top$ arguments to $\PA : A \to \USet$. Likewise, the sort specification $B : \Pi(\star : \top).A\;\star\;\star \to \UU$, for which we have type $\delta.B : \top \to \delta.A\;\star\;\star \to \USet$ gets mapped to the type of predicates $\delta^{M_1}.B : \top \to (a : \delta.A\;\star\;\star) \to \delta.B\;\star\;a \to \USet$, and dropping $\top$ arguments gives $\PB : (a : A) \to B\;a \to \USet$. The motives of the simple elimination rules are thus pairs of \[\PA : A \to \USet\qquad\text{ and }\qquad \PB : (a : A) \to B\;a \to \USet.\]
 
 \begin{definition}[\label{M2-translation}$-^{M_2}$ translation: simple elimination methods]
 Given $\delta^{M_1} : \Delta^{M_1}\;\delta$, we can define the inductive hypotheses for inductive arguments: for all $\Gamma ; \Delta ; \Xi \tac A : \UU$, given $\xi : \Xi^C\;\delta$ and $a : A^C\;\delta\;\xi$, we define the type $A^{M_2}\;\xi\;a$ by
@@ -931,7 +934,7 @@ We then let the type of motives $\Delta^{M_2}\;\delta\;\delta^{M_1}$ be given by
 
 Going back to the example in Figure \ref{example-definition} again, the specification of the $\join$ operation is \[\join : \Pi(\star : \top)(p : \Sigma(a : A\;\star\;\star).B\;\star\;a).A\;\star\;\star.\]
 The actual operation is a function \[\delta.\join : \top \to ((a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a) \to \delta.A\;\star\;\star\] (or $\join : (a : A) \to B\;a \to A$ if curried).
-Given motives $\delta^{M_1}.A$ and $\delta^{M_2}.B$, the induction hypothesis for a pair $p : (a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{M_2}\;\star\;p$, which by the definition of $-^{M_2}$ is \[\delta^{M_1}.A\;\star\;\star\;(p.1) \times \delta^{M_1}.B\;\star\;(p.1)\;(p.2).\] The method then, is \begin{align*}\delta^{M_2}.\join :&\; \top \to (p : (a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a) \to\\&\; (\delta^{M_1}.A\;\star\;\star\;(p.1) \times \delta^{M_1}.B\;\star\;(p.1)\;(p.2)) \to \delta^{M_1}.A\;\star\;\star\;\delta.\join\;\star\;p.\end{align*} If we do a bit of currying and rearranging, this becomes \[P\join : (a : A) \to PA\;a \to (b : B\;a) \to PB\;a\;b \to PA\;(\join\;a\;b).\] Moving $a$ and $b$ to the left side (the pair $(a, b)$ is the $a$ in $\delta^{M_2}.F\;x\;a$ above), we have \[P\join\;(a, b) : (PA\;a \times PB\;a\;b) \to PA\;(\join\;a\;b),\] which can be read as ``if the motives hold for the arguments then the motives hold for the conclusion.''
+Given motives $\delta^{M_1}.A$ and $\delta^{M_2}.B$, the induction hypothesis for a pair $p : (a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{M_2}\;\star\;p$, which by the definition of $-^{M_2}$ is \[\delta^{M_1}.A\;\star\;\star\;(p.1) \times \delta^{M_1}.B\;\star\;(p.1)\;(p.2).\] The method then, is \begin{align*}\delta^{M_2}.\join :&\; \top \to (p : (a : \delta.A\;\star\;\star)\times \delta.B\;\star\;a) \to\\&\; (\delta^{M_1}.A\;\star\;\star\;(p.1) \times \delta^{M_1}.B\;\star\;(p.1)\;(p.2)) \to \delta^{M_1}.A\;\star\;\star\;\delta.\join\;\star\;p.\end{align*} If we do a bit of currying and rearranging, this becomes \[P\join : (a : A) \to \PA\;a \to (b : B\;a) \to \PB\;a\;b \to \PA\;(\join\;a\;b).\] Moving $a$ and $b$ to the left side (the pair $(a, b)$ is the $a$ in $\delta^{M_2}.F\;x\;a$ above), we have \[P\join\;(a, b) : (\PA\;a \times \PB\;a\;b) \to \PA\;(\join\;a\;b),\] which can be read as ``if the motives hold for the arguments then the motives hold for the conclusion.''
 
 Now, if we provide motives (saying what we want to eliminate into), and methods (saying how to do it), then we want to define some functions by induction.
 
@@ -939,7 +942,7 @@ Now, if we provide motives (saying what we want to eliminate into), and methods 
 We let the type $\Delta^{E_1}\;\delta\;\delta^{M_1}$ of the elimination rules be the type of tuples of functions \[\delta^{E_1} \;x\;a : (t : \delta.T\;x\;a) \to \delta^{M_1}.T\;x\;a\;t \] for all sorts $T : \Pi(x : X).A\to\UU \in\Delta$, witnessing that the predicate $\delta^{M_1}.T$ holds for all $t$.
 \end{definition}
 
-In Figure \ref{example-definition}, these are $EA : (a : A) \to PA\;a$ and $EB\;a : (b : B\;a) \to PB\;a\;b$.
+In Figure \ref{example-definition}, these are $\EA : (a : A) \to \PA\;a$ and $\EB\;a : (b : B\;a) \to \PB\;a\;b$.
 
 \begin{definition}[\label{E2-translation}$-^{E_2}$ translation: simple equations]
 Given $\delta^{E_1} : \Delta^{E_1}\;\delta\;\delta^{M_1}$, we can show that the induction hypothesis is always satisfied. Given $\Gamma ; \Delta ; \Xi \tac A : \UU$, $\xi : \Xi^C\;\delta$, and $a : A^C\;\delta\;\xi$, we define $A^{E_2}\;\xi\;a : A^{M_2}\;\xi\;a$ by
@@ -954,7 +957,7 @@ In short, we use the eliminator component-wise.
 Then, given $\delta^{M_2} : \Delta^{M_2}\;\delta\;\delta^{M_1}$, we define the type $\Delta^{E_2}\;\delta\;\delta^{M_1}\;\delta^{M_2}\;\delta^{E_1}$ of the (propositional) equations to be tuples of equalities \[\delta^{E_2}.F\;x\;a : \Id{\delta^{E_1}.B\;\hat{r}\;(\hat{s}^C\;\delta\;\langle a \rangle)\;(\delta.F\;x\;a)}{\delta^{M_2}.F\;x\;a\;(A^{E_2}\;\emptytuple\;a)}\] for all operations $F : \Pi(x : X)(a : A).B\;\hat{r}\;\hat{s} \in\Delta$ expressing that the eliminator $\delta^{E_1}.B$ applied to the constructor $\delta.F\;x\;a$ is equal to using the provided induction step $\delta^{M_2}.F$ with the induction hypothesis $A^{E_2}\;\emptytuple\;a$ given by the eliminator.
 \end{definition}
 
-For $\join$, this definition comes out to the type \[E\join\;(a, b) : \IdA{EA\;(\join\;a\;b)}{P\join\;(a,b)\;(EA\;a, EB\;a\;b)}{PA\;(\join\;a\;b)}.\] The sub-term $(EA\;a, EB\;a\;b)$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{E_2}\;\emptytuple\;(a, b)$, witnessing that the induction hypothesis $(PA\;a \times PB\;a\;b)$ for $P\join$ is satisfied. For $\inj$, we have \[E\inj\;a : \IdA{EB\;a\;(\inj\;a)}{P\inj\;a\;(EA\;a)}{PB\;a\;(\inj\;a)}.\]
+For $\join$, this definition comes out to the type \[E\join\;(a, b) : \IdA{\EA\;(\join\;a\;b)}{P\join\;(a,b)\;(\EA\;a, \EB\;a\;b)}{\PA\;(\join\;a\;b)}.\] The sub-term $(\EA\;a, \EB\;a\;b)$ is $(\Sigma(a : A\;\star\;\star).B\;\star\;a)^{E_2}\;\emptytuple\;(a, b)$, witnessing that the induction hypothesis $(\PA\;a \times \PB\;a\;b)$ for $P\join$ is satisfied. For $\inj$, we have \[E\inj\;a : \IdA{\EB\;a\;(\inj\;a)}{P\inj\;a\;(\EA\;a)}{\PB\;a\;(\inj\;a)}.\]
 
 This concludes the definition of the simple elimination rules we will use. Going back to our running example, applying the $-^M$, and $-^E$ translations to the specification in Figure \ref{example-code} gives the second and third sets of types in Figure \ref{example-definition}.
 
@@ -1059,7 +1062,7 @@ The eliminators $\delta^{PE_1} : \Delta^{PE_1}\;\delta^{PM_1}$ have types \[\del
     \caption{\label{pre-syntax-translation}The pre-syntax translation, summarized}
 \end{figure}
 
-Compare this to the case of our running example, the pre-syntax for which was given in \S\ref{ex-pre-syntax}. Our translation gives \[\pre{P\join} : (p : \pre{A} \times \pre{B}) \to (\pre{PA}\;(p.1)\times \pre{PB}\;(p.2)) \to \pre{PA}\;(\pre{\join}\;p)\] instead of \[\pre{P\join} : (a : \pre{A}) \to (b : \pre{B}) \to (\pre{PA}\;a \times \pre{PB}\;b) \to \pre{PA}\;(\pre{\join}\;a\;b),\] but these are equivalent up to currying.
+Compare this to the case of our running example, the pre-syntax for which was given in \S\ref{ex-pre-syntax}. Our translation gives \[\pre{P\join} : (p : \pre{A} \times \pre{B}) \to (\pre{\PA}\;(p.1)\times \pre{\PB}\;(p.2)) \to \pre{\PA}\;(\pre{\join}\;p)\] instead of \[\pre{P\join} : (a : \pre{A}) \to (b : \pre{B}) \to (\pre{\PA}\;a \times \pre{\PB}\;b) \to \pre{\PA}\;(\pre{\join}\;a\;b),\] but these are equivalent up to currying.
 
 \end{subsection}
 \begin{subsection}{goodness algebras}\label{goodness-algebra}
