@@ -170,9 +170,7 @@ Here the $\eta$ rules express that $(A, \leq)$ is a sub-relation of $(A^*, \leq^
 For the purposes of this paper, we will focus on one relatively simple inductive-inductive definition (with only 5 clauses), parametrized by a type $X$, which is given in Figure \ref{example-definition}.
 We will use this definition to prove that \Forsberg/'s construction implies UIP in \S\ref{derivingUIP} and as a running example to demonstrate our construction in cubical type theory in \S\ref{example-construct-cubical}.
 
-Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s\erase{ (mirroring the type of context extension)}, and $\eta$ gives us something to start with: one element of $A$ for each element of $X$\erase{ (following the use of $\eta$ in \citep[Example 3.3]{nordvallforsberg2013thesis})}.
-
-The proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
+Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s\erase{ (mirroring the type of context extension)}, and $\eta$ gives us something to start with: one element of $A$ for each element of $X$\erase{ (following the use of $\eta$ in \citep[Example 3.3]{nordvallforsberg2013thesis})}. The proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
 
 \begin{figure}[htpb]
     \begin{flushleft}
@@ -257,12 +255,12 @@ Here, the sorts $A$ and $B$ are defined as pairs of the pre-syntax with a goodne
 \caption{\label{example-good-mutind}Construction given by \Forsberg/}
 \end{figure}
 
-In extensional type theory, \Forsberg/ proved that inhabitants of $\good{A}$ are unique \citep[][Lemma 5.37(ii)]{nordvallforsberg2013thesis}. In intensional type theory as well, if UIP holds then inhabitants of $\good{A}$ are unique. The uniqueness of goodness proofs justifies having the definition of $B$ ignore the goodness proof $\good{a}$, since $\good{a}$ can have at most one value.
+In extensional type theory, \Forsberg/ proved that $\good{A}\;a$ is a mere proposition \citep[][Lemma 5.37(ii)]{nordvallforsberg2013thesis}. In intensional type theory as well, if function extensionality and UIP hold then $\good{A}$ is a mere proposition. This uniqueness of goodness proofs justifies having the definition of $B$ ignore the goodness proof $\good{a}$, since $\good{a}$ can have at most one value.
 
 In the next two subsections, we prove that:
 \begin{enumerate}
-    \item The inhabitants of $\good{A}$ are unique only if UIP holds for the type $X$ (Lemma \ref{UIP-from-uniq-good}).
-    \item The simple elimination rules from Figure \ref{example-definition} hold for the $(A, B, \eta, \inj, \join)$ constructed above only if the inhabitants of $\good{A}$ are unique (Lemma \ref{uniq-good-from-simple-elim}).
+    \item $\good{A}\;a$ is a mere proposition only if UIP holds for the type $X$ (Lemma \ref{UIP-from-uniq-good}).
+    \item The simple elimination rules from Figure \ref{example-definition} hold for the $(A, B, \eta, \inj, \join)$ constructed above only if $\good{A}\;a$ is a mere proposition (Lemma \ref{uniq-good-from-simple-elim}).
 \end{enumerate}
 Combining these results, we conclude that \Forsberg/'s construction satisfies the simple elimination rules in intensional type theory only if UIP holds (Theorem \ref{Forsberg-gives-UIP}).
 
@@ -280,12 +278,12 @@ We first prove that there are at least as many proofs of $\good{A}\;(x == y)$ as
 \end{proof}
 
 \begin{lemma}[\label{UIP-from-uniq-good}Unique goodness only if UIP]
-    If the inhabitants of $\good{A}\;t$ are unique for all $t : \pre{A}$, then UIP holds for the type $X$.
+    If $\good{A}\;t$ is a mere proposition for all $t : \pre{A}$, then UIP holds for the type $X$.
 \end{lemma}
 \begin{proof}
     Assume goodness proofs are unique, and take $x : X$, $y : X$, with $p : \Id{x}{y}$, $q : \Id{x}{y}$. We want to show that $\Id{p}{q}$. Using the $f$ and $g$ from Lemma \ref{XtoAtoX}, \begin{align*}
     p &\equiv g\;(f\;p)&&\text{by Lemma \ref{XtoAtoX}}\\
-      &\equiv g\;(f\;q)&&\text{by uniqueness of $\good{A}\;(x == y)$, $\Id{f\;p}{f\;q}$}\\
+      &\equiv g\;(f\;q)&&\text{by uniqueness in $\good{A}\;(x == y)$, $\Id{f\;p}{f\;q}$}\\
       &\equiv q&&\text{by Lemma \ref{XtoAtoX}}.
     \end{align*}
 \end{proof}
@@ -316,7 +314,7 @@ Now we prove that there are at least as many proofs of $B\;(\pre{t},\good{t})$ a
 \end{proof}
 
 \begin{lemma}[\label{uniq-good-from-simple-elim}Simple elimination rules only if unique goodness]
-    If the simple eliminators hold for the $(A,B,\eta,\inj,\join)$ constructed above, then for all $t : \pre{A}$, the inhabitants of $\good{A}\;t$ are unique.
+    If the simple eliminators hold for the $(A,B,\eta,\inj,\join)$ constructed above, then for all $t : \pre{A}$, $\good{A}\;t$ is a mere proposition.
 \end{lemma}
 \begin{proof}
     Assume that the simple elimination rules hold, and take $t : \pre{A}$, and $a_1$ and $a_2$ in $\good{A}\;t$. We use the definition of $f$ and $g$ from Lemma \ref{AtoBtoA} with $\pre{t} = t$ and $\good{t} = a_1$.
