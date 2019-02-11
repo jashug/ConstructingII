@@ -170,7 +170,7 @@ Here the $\eta$ rules express that $(A, \leq)$ is a sub-relation of $(A^*, \leq^
 For the purposes of this paper, we will focus on one relatively simple inductive-inductive definition (with only 5 clauses), parametrized by a type $X$, which is given in Figure \ref{example-definition}.
 We will use this definition to prove that \Forsberg/'s construction implies UIP in \S\ref{derivingUIP} and as a running example to demonstrate our construction in cubical type theory in \S\ref{example-construct-cubical}.
 
-Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s\erase{ (mirroring the type of context extension)}, and $\eta$ gives us something to start with: one element of $A$ for each element of $X$\erase{ (following the use of $\eta$ in \citep[Example 3.3]{nordvallforsberg2013thesis})}. The proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
+Our example starts with the simplest inductive-inductive sorts, taking $A : \USet$ and $B : A \to \USet$, and then populates $A$ and $B$ with simple constructors which suffice for our proof of UIP. We have $\inj$, which is supposed to give exactly one element of each $B\;a$, while $\join$ lets us mix $B$s back into the $A$s (mirroring the type of context extension), and $\eta$ gives us something to start with: one element of $A$ for each element of $X$ (following the use of $\eta$ in \citep[Example 3.3]{nordvallforsberg2013thesis}). The proof of UIP in \S\ref{derivingUIP} proceeds by considering the type $B\;(\join\;(\eta\;x)\;(\inj\;(\eta\;x))$ for some $x : X$, and noticing that, while the simple elimination rules tell us that there should only be one element of this type (given by $\inj$), in \Forsberg/'s construction there are actually as many as there are proofs of $\IdA{x}{x}{X}$.
 
 \begin{figure}[htpb]
     \begin{flushleft}
@@ -250,7 +250,7 @@ B\; (\pre{a},\good{a}) =&\; (\pre{b} : \pre{B})\times\good{B}\;\pre{a}\;\pre{b},
 \join\;(\pre{a},\good{a})\;(\pre{b},\good{b})=&\; \pre{\join}\;\pre{a}\;\pre{b}, \good{\join}\;\pre{a}\;\good{a}\;\pre{b}\;\good{b},\\
 \inj\;(\pre{a},\good{a})=&\;\pre{\inj}\;\pre{a}, \good{\inj}\;\pre{a}\;\good{a}.
 \end{align*}
-Here, the sorts $A$ and $B$ are defined as pairs of the pre-syntax with a goodness proof, and operations are performed component-wise on both the pre-syntax and the goodness proof.
+Here, the sorts $A$ and $B$ are defined as pairs of the pre-syntax with a goodness proof, and operations are performed component-wise on both the pre-syntax and the goodness proof (using sort and operation in their algebraic sense).
 \end{flushleft}
 \caption{\label{example-good-mutind}Construction given by \Forsberg/}
 \end{figure}
@@ -565,9 +565,9 @@ We will now construct a nice goodness algebra by taking the limit of the sequenc
     
     This subsection \emph{Limit of Types} is formalized in \texttt{Chain.agda}.
     
-    In order to take the limit of successive goodness algebras, we need to know how to work with \emph{chains} of types. Specifically, given $(X : \N \to \II \to \USet)$ and $\pi : (n : \N) \to X\;(n+1)\;i_0 \to X\;n\;i_1$, we consider the type \[\text{chain.t}\;X\;\pi = (f : (n : \N) \to X\;n\;i_0)\times((n : \N) \to \IdA{f\;n}{\pi\;n\;(f\;(n+1))}{X\;n}.\] If we have $x : \text{chain.t}\;X\;\pi$, then let $x.p$ denote the second projection. 
+    In order to take the limit of successive goodness algebras, we need to know how to work with \emph{chains} of types. Specifically, given $(X : \N \to \II \to \USet)$ and $\pi : (n : \N) \to X\;(n+1)\;i_0 \to X\;n\;i_1$, we consider the limit given by the type \[\text{chain.t}\;X\;\pi = (f : (n : \N) \to X\;n\;i_0)\times((n : \N) \to \IdA{f\;n}{\pi\;n\;(f\;(n+1))}{X\;n}.\] If we have $x : \text{chain.t}\;X\;\pi$, then let $x.p$ denote the second projection.
     
-    This definition is designed to work well in cubical type theory, and uses the interval type and native heterogeneous equality. We take $X$ to be a whole line of types rather than a single type because it makes dependent chains easy: given
+    This definition is designed to work well in cubical type theory, and uses the interval $\II$ and native heterogeneous equality $\IdA{x}{y}{X}$ where $X : \II\to \USet$ (where we can form $p = \lambda i.w : \IdA{x}{y}{X}$ when $p\;i_0 = x$, $p\;i_1 = y$, and $p\;i : X\;i$). In particular, this definition allows for dependent chains without transporting over the base equality, which is problematic in cubical type theory because transport gets stuck on neutral types; instead given
     \begin{gather*}A : \N\to \USet\qquad\text{with}\qquad f_A : (n : \N) \to A\;(1+n) \to A\;n\qquad \text{and}\\B : (n : \N) \to A\;n \to \USet\qquad\text{with}\\f_B : (n : \N) \to (a : A\;(1+n)) \to B\;(1+n)\;a \to B\;n\;(f_A\;n\;a),\end{gather*}
     we can form
     \begin{align*}
@@ -611,7 +611,7 @@ We will now construct a nice goodness algebra by taking the limit of the sequenc
         \end{lemma}
     }
     
-    We also prove a dependent version of the fact that the limit of a chain is equivalent to the limit of a shifted chain. The proof of the non-dependent version of that fact can be found in \citet{nonwellfoundedtrees} as Lemma 12.
+    We also note a dependent version of the fact that the limit of a chain is equivalent to the limit of a shifted chain. The proof of the non-dependent version of that fact can be found in \citet{nonwellfoundedtrees} as Lemma 12.
     
     \begin{lemma}[\label{limit-sort-lemma}Dependent chain equivalent to shifted chain]
         Given \begin{align*}
