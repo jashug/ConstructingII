@@ -106,7 +106,7 @@
 \maketitle
 
 \begin{abstract}
-Inductive-inductive types are a joint generalization of mutual inductive types and indexed inductive types. In extensional type theory, inductive-inductive types can be constructed from inductive types, and this construction has been conjectured to work in intensional type theory as well. In this paper, we show that the existing construction requires Uniqueness of Identity Proofs, and present a new construction in cubical type theory which is compatible with homotopy type theory.
+Inductive-inductive types are a joint generalization of mutual inductive types and indexed inductive types. In extensional type theory, inductive-inductive types can be constructed from inductive types, and this construction has been conjectured to work in intensional type theory as well. In this paper, we show that the existing construction requires Uniqueness of Identity Proofs, and present a new construction (which we conjecture generalizes) of one particular inductive-inductive type in cubical type theory, which is compatible with homotopy type theory.
 \end{abstract}
 
 \begin{section}{Introduction}
@@ -130,8 +130,8 @@ In this paper, we first show that this construction does not work in intensional
 %, and make progress towards constructing the general elimination rules.
 Specifically, this paper makes the following contributions:\footnote{The formalization can be found at \url{https://github.com/jashug/ConstructingII}.}
 \begin{enumerate}
-    \item In \S\ref{derivingUIP}, we show that, in intensional type theory, if the types constructed by \Forsberg/ satisfy the simple elimination rules, then UIP holds. We formalize this in both Coq and Agda.
-    \item In \S\ref{example-construct-cubical}, we describe the construction of a specific inductive-inductive type in cubical type theory, along with its simple elimination rules. We formalize this in cubical Agda.
+    \item In \S\ref{derivingUIP}, we show that, in intensional type theory, if the types constructed by \Forsberg/ satisfy the simple elimination rules, then UIP holds (formalized in both Coq and Agda).
+    \item In \S\ref{example-construct-cubical}, we give the construction of a particular inductive-inductive type with simple elimination rules in cubical type theory (formalized in cubical Agda).
     %\item In \S\ref{construct-cubical}, we define a general class of inductive-inductive definitions, and prove that they can all be constructed in cubical type theory, satisfying the simple elimination rules, following the same pattern as our example construction.
 \end{enumerate}
 
@@ -1253,7 +1253,7 @@ Many other structures have been reduced to plain inductive types. Our constructi
 In this paper, we have:
 \begin{enumerate}
     \item Shown that the construction of inductive-inductive types given by \Forsberg/ implies UIP.
-    \item Given an alternative construction of inductive-inductive types in cubical type theory, which is compatible with Homotopy Type Theory.
+    \item Given an alternative construction of one particular inductive-inductive type in cubical type theory, which is compatible with Homotopy Type Theory.
 \end{enumerate}
 
 We claim that the construction of our specific running example is straightforwardly generalizable to other inductive-inductive types, and have formalized the construction of a number of other examples including types with non-finitary constructors and indices to support this claim (see the GitHub repository referenced in the introduction).
