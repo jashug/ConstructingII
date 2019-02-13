@@ -29,8 +29,8 @@ record Σ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
 open Σ public
 
 -- homotopy proposition
-unique-inhabitants : ∀ {ℓ} (X : Set ℓ) → Set ℓ
-unique-inhabitants X = (x y : X) → x ≡ y
+mere-proposition : ∀ {ℓ} (X : Set ℓ) → Set ℓ
+mere-proposition X = (x y : X) → x ≡ y
 
 -- homotopy set
 UIP-holds : ∀ {ℓ} (X : Set ℓ) → Set ℓ
@@ -46,6 +46,7 @@ module UIP-from-Forsberg-II {ℓ} (X : Set ℓ) where
   -- data B where
   --   inj : (a : A) → B a
 
+  -- Fig 2: Pre-syntax for the running example
   data pre-A : Set ℓ
   data pre-B : Set ℓ
   data pre-A where
@@ -53,7 +54,8 @@ module UIP-from-Forsberg-II {ℓ} (X : Set ℓ) where
     pre-join : pre-A → pre-B → pre-A
   data pre-B where
     pre-inj : pre-A → pre-B
-    
+
+  -- Fig 3: Construction given by Nordvall Forsberg
   data good-A : pre-A → Set ℓ
   data good-B : pre-A → pre-B → Set ℓ
   data good-A where
@@ -97,10 +99,10 @@ module UIP-from-Forsberg-II {ℓ} (X : Set ℓ) where
   simple-eliminators = (M : Motives ℓ) → Eliminated ℓ M
 
   module unique-goodness-only-if-UIP where
-    -- Section 4.1
+    -- Section 2.1
     pattern _==_ x y = pre-join (pre-η x) (pre-inj (pre-η y))
 
-    -- Lemma 4.1
+    -- Lemma 1
     module XtoAtoX-retract (x : X) where
       XtoA : ∀ y → x ≡ y → good-A (x == y)
       XtoA .x refl = good-join _ (good-η x) _ (good-inj _ (good-η x))
@@ -110,7 +112,7 @@ module UIP-from-Forsberg-II {ℓ} (X : Set ℓ) where
       XtoAtoX-id .x refl = refl
     open XtoAtoX-retract
 
-    module _ (A-unique : ∀ t → unique-inhabitants (good-A t)) where
+    module _ (A-unique : ∀ t → mere-proposition (good-A t)) where
       t : X → A
       t x = join (η x) (inj (η x))
       UIP-refl : (x : X) (p : x ≡ x) → refl ≡ p
@@ -119,7 +121,7 @@ module UIP-from-Forsberg-II {ℓ} (X : Set ℓ) where
         (XtoAtoX-id x x p)
       -- note UIP-refl x refl = refl fails because K is disabled
 
-      -- Lemma 4.2
+      -- Lemma 2
       UIP : (x y : X) (p q : x ≡ y) → p ≡ q
       UIP x .x refl q = UIP-refl x q
 
@@ -131,9 +133,9 @@ module UIP-from-Forsberg-II {ℓ} (X : Set ℓ) where
   open unique-goodness-only-if-UIP using (UIP) public
 
   module simple-eliminators-only-if-unique-goodness where
-    -- Section 4.2
+    -- Section 2.2
 
-    -- Lemma 4.3
+    -- Lemma 3
     module AtoBtoA-retract where
       AtoB : ∀ t → good-A (t .fst) → B t
       AtoB t good-a = pre-inj (t .fst) , good-inj (t .fst) good-a
@@ -153,17 +155,17 @@ module UIP-from-Forsberg-II {ℓ} (X : Set ℓ) where
           Pinj = λ a _ → step-inj a
         } .Eliminated.EB
 
-      -- Lemma 4.4
+      -- Lemma 4
       B-contr : ∀ a → (b : B a) → inj a ≡ b
       B-contr = match-on-B (λ a b → inj a ≡ b) (λ a → refl)
 
-      -- Lemma 4.5
+      -- Lemma 5
       A-unique : ∀ t (a1 a2 : good-A t) → a1 ≡ a2
       A-unique t a1 a2 = let t' = t , a1 in cong (BtoA t') (B-contr t' (AtoB t' a2))
   open simple-eliminators-only-if-unique-goodness using (A-unique) public
 
 open UIP-from-Forsberg-II using (simple-eliminators ; UIP ; A-unique)
 
--- Theorem 4.6
+-- Theorem 1
 UIP-from-Forsberg-II : ∀ {ℓ} (X : Set ℓ) → simple-eliminators X → UIP-holds X
 UIP-from-Forsberg-II X elim = UIP X (A-unique X elim)

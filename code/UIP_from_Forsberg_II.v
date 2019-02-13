@@ -1,7 +1,5 @@
 (* Checked with Coq 8.8.0. *)
 
-(* Need to fix lemma numbers *)
-
 Set Universe Polymorphism.
 
 From Coq Require ssreflect.
@@ -17,7 +15,7 @@ Arguments p2 {A B}.
 (* Some properties of types: *)
 
 (* homotopy proposition *)
-Definition unique_inhabitants@{i} (X : Type@{i}) : Type@{i}
+Definition mere_proposition@{i} (X : Type@{i}) : Type@{i}
   := forall (x y : X), x = y.
 (* homotopy set; equivalently forall (x y : X), unique_inhabitants (x = y). *)
 Definition UIP_holds@{i} (X : Type@{i}) : Type@{i}
@@ -37,12 +35,15 @@ inj : forall a, B a
 c.f. Forsberg's thesis section 5.3, example 5.32
 *)
 
+(* Fig 2: Pre-syntax for the running example *)
 Inductive preA : Type@{i} :=
   | pre_eta : X -> preA
   | pre_join : preA -> preB -> preA
 with preB : Type@{i} :=
   | pre_inj : preA -> preB
 .
+
+(* Fig 3: Construction given by Nordvall Forsberg *)
 Inductive goodA : preA -> Type@{i} :=
   | good_eta : forall x, goodA (pre_eta x)
   | good_join : forall a, goodA a -> forall b, goodB a b -> goodA (pre_join a b)
@@ -84,14 +85,14 @@ Definition simple_eliminators : Type@{i+1}
   := (forall m : motives@{i}, eliminated m).
 
 Section unique_goodness_only_if_UIP.
-(* Section 4.1 *)
+(* Section 2.1 *)
 
 Notation "( x == y )" := (pre_join (pre_eta x) (pre_inj (pre_eta y))).
 
 Section XtoAtoX_retract.
 Context (x : X).
 (* Retraction from (x = y) to goodA (x == y) *)
-(* Lemma 4.1 *)
+(* Lemma 1 *)
 Definition XtoA y : x = y -> goodA (x == y)
   := fun 'eq_refl => good_join _ (good_eta x) _ (good_inj _ (good_eta x)).
 Definition AtoX y : goodA (x == y) -> x = y
@@ -103,23 +104,23 @@ Definition XtoAtoX_id y : forall (e : x = y), AtoX y (XtoA y e) = e
   := fun e => match e with eq_refl => eq_refl end.
 End XtoAtoX_retract.
 
-Context (A_unique : forall t, unique_inhabitants (goodA t)).
+Context (A_unique : forall t, mere_proposition (goodA t)).
 Let t x : A := join (eta x) (inj (eta x)).
 Definition UIP_refl : forall x (p : x = x), eq_refl = p
   := fun x p => eq_trans
      (f_equal (AtoX x x) (A_unique (x == x) (t x).(p2) (XtoA x x p)))
      (XtoAtoX_id x x p).
 
-(* Lemma 4.2 *)
+(* Lemma 2 *)
 Definition UIP : forall (x y : X) (p q : x = y), p = q
   := fun x y p => match p with eq_refl => UIP_refl x end.
 End unique_goodness_only_if_UIP.
 
 Section simple_eliminators_only_if_unique_goodness.
-(* Section 4.2 *)
+(* Section 2.2 *)
 
 (* Retraction from goodA (p1 t) to B t (for all t : A) *)
-(* Lemma 4.3 *)
+(* Lemma 3 *)
 Definition AtoB t : goodA (p1 t) -> B t
   := fun good_a => pair (pre_inj (p1 t)) (good_inj (p1 t) good_a).
 Definition BtoA t : B t -> goodA (p1 t)
@@ -141,11 +142,11 @@ Definition match_on_B
         PA _ := unit; Peta _ := tt; Pjoin _ _ _ _ := tt;
       |}).(EB).
 
-(* Lemma 4.4 *)
+(* Lemma 4 *)
 Definition B_contr : forall a (b : B a), inj a = b
   := match_on_B (fun a b => inj a = b) (fun a => eq_refl (inj a)).
 
-(* Lemma 4.5 *)
+(* Lemma 5 *)
 (* Combining with B_contr, we can show that goodA t has unique inhabitents *)
 Definition A_unique t : forall a1 a2 : goodA t, a1 = a2
   := fun a1 a2 => let tt := pair t a1 in
@@ -155,7 +156,7 @@ End simple_eliminators_only_if_unique_goodness.
 
 End UIP_from_Forsberg_II.
 
-(* Theorem 4.6 *)
+(* Theorem 1 *)
 Definition UIP_from_Forsberg_II@{i} (X : Type@{i})
   : simple_eliminators X -> UIP_holds X
   := fun elim => UIP@{i} X (A_unique X elim).
