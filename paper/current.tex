@@ -576,7 +576,8 @@ We will now construct a nice goodness algebra by taking the limit of the sequenc
     \end{align*}
     using $\text{cong}(B\;n)(a.p\;n)$ which is particularly well behaved in cubical type theory.
     
-    This construction commutes with most type formers: dependent function types, dependent pair types, identity types, and constants. See the formalization for details.
+    This construction commutes with most type formers: dependent function types, dependent pair types, identity types, and constants.
+    We also note a dependent version of the fact that the limit of a chain is equivalent to the limit of a shifted chain to substitute for \citet[Lemma 12]{nonwellfoundedtrees}.
     
     \erase{
         \begin{lemma}[\label{limit-pair-commute}chain commutes with dependent pair]
@@ -611,8 +612,6 @@ We will now construct a nice goodness algebra by taking the limit of the sequenc
         \end{lemma}
     }
     
-    We also note a dependent version of the fact that the limit of a chain is equivalent to the limit of a shifted chain. The proof of the non-dependent version of that fact can be found in \citet{nonwellfoundedtrees} as Lemma 12.
-    
     \begin{lemma}[\label{limit-sort-lemma}Dependent chain equivalent to shifted chain]
         Given \begin{align*}
         X &: \N \to \USet,\qquad
@@ -628,6 +627,7 @@ We will now construct a nice goodness algebra by taking the limit of the sequenc
         Applying $f$ component-wise gives a function from $t^+$ to $t$.
         This function is an equivalence.
     \end{lemma}
+    We only use Lemma \ref{limit-sort-lemma} when $Y_1\;n\;(\pi_X\;n\;x) = Y_0\;(1+n)\;x$, so we may take $g$ to be the identity, leaving $t^+$ the shifted chain of $t$ up to $X$ arguments.
     
 \end{subsubsection}
 
