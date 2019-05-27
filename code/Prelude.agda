@@ -9,7 +9,28 @@ open import Agda.Builtin.Nat public
   using (zero; suc)
   renaming (Nat to ℕ)
 
-open import Primitives public
+open import Agda.Primitive.Cubical public renaming
+  ( primIMin       to _∧_  -- I → I → I
+  ; primIMax       to _∨_  -- I → I → I
+  ; primINeg       to ~_   -- I → I
+  ; isOneEmpty     to empty
+  -- ; primComp       to comp
+  -- ; primHComp      to hcomp
+  -- ; primTransp     to transp
+  -- ; itIsOne        to 1=1
+  )
+open import Agda.Builtin.Cubical.Path public
+open import Agda.Builtin.Cubical.Sub public renaming
+  ( inc to inS
+  ; primSubOut to outS
+  )
+
+Path = _≡_
+
+_[_↦_] : ∀ {ℓ} (A : Set ℓ) (φ : I) (u : Partial φ A) → Setω
+A [ φ ↦ u ] = Sub A φ u
+
+infix 4 _[_↦_]
 
 record ⊤ {ℓ} : Set ℓ where
   constructor tt
@@ -48,19 +69,27 @@ module _ {ℓ} {A : Set ℓ} where
   trans : {x y z : A} → x ≡ y → y ≡ z → x ≡ z
   trans {x = x} p q i = primComp (λ _ → A) _ (λ { j (i = i0) → x ; j (i = i1) → q j }) (p i)
 
+  trans-refl-right : {x y : A} (p : x ≡ y) → trans p refl ≡ p
+  trans-refl-right {x} {y} p i j = primComp (λ _ → A) _ (λ { k (i = i1) → p j; k (j = i0) → x; k (j = i1) → y }) (p j)
+
   cong : ∀ {ℓ'} {B : Set ℓ'} {x y : A} → (f : A → B) → x ≡ y → f x ≡ f y
   cong f p = λ i → f (p i)
 
-fill : {ℓ : I → Level} → (A : (i : I) → Set (ℓ i)) → (φ : I) →
-  ((i : I) → Partial φ (A i)) → A i0 → (i : I) → A i
-fill A φ u a0 i = unsafeComp (λ j → A (i ∧ j)) (φ ∨ ~ i)
-  (λ j → unsafePOr φ (~ i) (u (i ∧ j)) λ { (i = i0) → a0 }) a0
+fill : {ℓ : I → Level} (A : ∀ i → Set (ℓ i)) (φ : I)
+       (u : ∀ i → Partial φ (A i))
+       (u0 : A i0 [ φ ↦ u i0 ])
+       (i : I) → A i
+fill A φ u u0 i =
+  primComp (λ j → A (i ∧ j)) (φ ∨ ~ i)
+       (λ { j (φ = i1) → u (i ∧ j) itIsOne
+          ; j (i = i0) → outS u0 })
+       (outS u0)
 
 transp : {ℓ : I → Level} → (A : (i : I) → Set (ℓ i)) → A i0 → A i1
 transp A x = primComp A i0 (λ _ → empty) x
 
 coep : ∀ {ℓ} → (p : ∀ i → Set ℓ) → (a : p i0) → PathP p a (transp p a)
-coep p a i = fill p i0 (λ _ → empty) a i
+coep p a i = fill p i0 (λ _ → empty) (inS a) i
 
 transp-refl : ∀{ℓ} → {A : Set ℓ} → (x : A) → transp (λ _ → A) x ≡ x
 transp-refl {A = A} x = sym (coep (λ _ → A) x)
@@ -138,7 +167,7 @@ module _ {ℓA ℓB ℓC} {A : Set ℓA} {B : Set ℓB} {C : Set ℓC} where
       in trans (trans
          (λ i → feq (sec' i .fst) .fst .fst , trans (sec' i .snd) (cong g (feq (sec' i .fst) .fst .snd)))
          (λ i → ffib i .fst , trans sec (cong g (ffib i .snd))))
-         (λ i → a , transp-refl sec i)
+         (λ i → a , trans-refl-right sec i)
 
   ≃-trans : A ≃ B → B ≃ C → A ≃ C
   ≃-trans (f , feq) (g , geq) .fst a = g (f a)
@@ -241,7 +270,7 @@ module equiv-Σ {ℓA1 ℓA2 ℓB1 ℓB2} {A1 : Set ℓA1} {A2 : Set ℓA2} {B1 
           auniq : Path {A = fiber (Aeq .fst) a2} (a1 , asec) (a1' , asec')
           auniq = Aeq .snd a2 .snd (a1' , asec')
           b2pp : (i j : I) → B2 (auniq i .snd j)
-          b2pp i j = fill (λ i → B2 (auniq i .snd j)) (~ j) (λ { _ (j = i0) → b2 }) (b2p j) i
+          b2pp i j = fill (λ i → B2 (auniq i .snd j)) (~ j) (λ { _ (j = i0) → b2 }) (inS (b2p j)) i
           buniq : ∀ y → Path {A = depfiber (Aeq .fst) (λ a → Beq a .fst) (Aeq .fst a1) (a1 , refl) (b2p i1)} (b1 , bsec) y
           buniq = Beq a1 .snd (b2p i1) .snd
           buniq-type-path : I → Set (ℓB1 ⊔ ℓB2)
@@ -317,7 +346,7 @@ module deg-sq {ℓ} {A : Set ℓ} where
   expand {y = y} p q k i j = fill (λ k → A) (i ∨ ~ i ∨ j ∨ ~ j)
     (λ { k (i = i0) → p (~ k ∨ j) ; k (i = i1) → q (k ∧ j) ;
          k (j = i0) → p (~ k ∨ i) ; k (j = i1) → q (k ∧ i) })
-    y k
+    (inS y) k
   module dep {ℓ₂} {B : A → Set ℓ₂} where
     expand-dep : ∀ {x y z : A} {p : x ≡ y} {q : y ≡ z} {xx : B x} {yy : B y} {zz : B z}
                  (pp : PathP (λ i → B (p i)) xx yy) (qq : PathP (λ i → B (q i)) yy zz) →
@@ -326,6 +355,4 @@ module deg-sq {ℓ} {A : Set ℓ} where
       (i ∨ ~ i ∨ j ∨ ~ j)
       (λ { k (i = i0) → pp (~ k ∨ j) ; k (i = i1) → qq (k ∧ j) ;
            k (j = i0) → pp (~ k ∨ i) ; k (j = i1) → qq (k ∧ i) })
-      yy k
-
-
+      (inS yy) k

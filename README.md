@@ -13,9 +13,11 @@ We also formalize the construction in cubical type theory of a number of inducti
 * `InfinitaryII.agda`: An example with infinitary constructors
 * `EvilII.agda` : This example has infinitary constructors and indices, and constructors in other constructors and sorts
 
-The code was checked using Coq 8.8.0 and Agda 2.6.0 commit bd338484d.
+This code has been checked using Coq 8.8.0 and Agda 2.6.0.1.
 
 The tag `FoSSaCS2019-camera-ready` refers to the code for FoSSaCS 2019 after revision based on reviewer feedback.
 
 The tag `FoSSaCS2019` refers to the code at the time of submission to FoSSaCS 2019.
+
+Check README.md in each of the tags for applicable versions of Coq and Agda.
 
